@@ -34,7 +34,7 @@ Route
 
 加点特技
 
-    from isperdal import microwave_painting
+    from isperdal import painting
 
     # callback
     '/'.all(
