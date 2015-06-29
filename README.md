@@ -8,30 +8,42 @@ isperdal
 Route
 -----
 
-使用`forbiddenfruit`实现的路由对象，
 以`/`分级触发
 
-    from forbiddenfruit import curse
-    from types import FunctionType
+正常风格
 
-    ROUTE = dict()
+    from isperdal import microwave as u
 
-    def __all(self, foo: FunctionType):
-        if self not in ROUTE: ROUTE[self] = list()
-        ROUTE[self].push(foo)
-        return self
+    # callback
+    u('/').all(
+        lambda this, req, res:
+            (await res.push("Hello world."))
+    ).run()
 
-    curse(str, 'all', __all)
+
+    # decorator
+    app = u('/')
+
+    @app.all
+    def foo(this: str, req: Request, res: Response):
+        await res.push("Hello world.")
+
+    app.run()
 
 ----------
 
+加点特技
+
+    from isperdal import microwave_painting
+
+    # callback
     '/'.all(
         lambda this, req, res:
             (await res.push("Hello world."))
     ).run()
 
-----------
 
+    # decorator
     app = '/'
 
     @app.all
