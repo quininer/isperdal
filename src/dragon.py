@@ -1,0 +1,2 @@
+class microwave(str):
+    pass

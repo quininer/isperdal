@@ -17,7 +17,7 @@ Route
     # callback
     u('/').all(
         lambda this, req, res:
-            (await res.push("Hello world."))
+            res.push("Hello world.")
     ).run()
 
 
@@ -26,7 +26,7 @@ Route
 
     @app.all
     def foo(this: str, req: Request, res: Response):
-        await res.push("Hello world.")
+        res.push("Hello world.")
 
     app.run()
 
@@ -39,7 +39,7 @@ Route
     # callback
     '/'.all(
         lambda this, req, res:
-            (await res.push("Hello world."))
+            res.push("Hello world.")
     ).run()
 
 
@@ -48,24 +48,27 @@ Route
 
     @app.all
     def foo(this: str, req: Request, res: Response):
-        await res.push("Hello world.")
+        res.push("Hello world.")
 
     app.run()
 
 Middleware
 ----------
 
-基于分级的中间件
+基于分级的有序中间件，
+非 wsgi 中间件，
+本质上不区分 Middleware 与 APP。
 
-    '/'.all(lambda this, req, res: print("logger {} {}".format(req.method, req.uri)))
-        .get('index')(lambda this, req, res: (await res.push("INDEX")))
+    # callback
+    '/'.all(lambda this, req, res: print("logger {} {}".format(req.method, req.uri)))\
+        .get('index')(lambda this, req, res: res.push("/INDEX"))\
         .get('app/'.all(
-            lambda this, req, res: ('id' in req.session or (await res.redirect('/index')))
-        ))(lambda this, req, res: (await res.push("/APP/")))
+            lambda this, req, res: ('id' in req.session or (_ for _ in ()).throw(res.redirect('/index')))
+        ))(lambda this, req, res: res.push("/APP/"))\
         .run()
 
-----------
 
+    # decorator
     app = '/'
 
     @app.all
@@ -74,20 +77,26 @@ Middleware
 
     @app.get('index')
     def index(this, req, res):
-        await res.push("INDEX")
+        res.push("/INDEX")
 
     @app.get('app/'.all(
-        lambda this, req, res: ('id' in req.session or (await res.redirect('/index')))
+        lambda this, req, res: ('id' in req.session or (_ for _ in ()).throw(res.redirect('/index')))
     ))
     def appindex(this, req, res):
-        await res.push("/APP/")
+        res.push("/APP/")
 
     app.run()
 
 Status
 ------
 
-**TODO**
+    app = u('/')
+
+    @app.socket('/websocket')
+    def socket(this, req, res):
+        pass
+
+    app.run()
 
 
 But..
