@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 from isperdal import microwave as u
+from database import db
 
 app = u('/')
 posts_node = app.all(u('posts/'))
@@ -12,17 +13,17 @@ def assets(this, req, res):
 
 @posts_node.get(u(':pid'))
 def get_posts(this, req, res):
-    body = (await db.query(req.rest['pid']).body)
+    body = (yield from db.query(req.rest['pid']).body)
     return res.ok(body)
 
 @posts_node.post(u(':pid/').then(u('comment')))
 def add_comment(this, req, res):
-    status = (await db.query(req.rest['pid']).update(req.body))
-    return res.ok(body)
+    status = (yield from db.query(req.rest['pid']).update(req.body))
+    return res.ok(status)
 
 @posts_node.get(u(':pid/').then(u('comment/').then(u(':cid'))))
 def get_comment(this, req, res):
-    comment = (await db.query(req.rest['pid']).query(req.rest['cid'].comment))
+    comment = (yield from db.query(req.rest['pid']).query(req.rest['cid'].comment))
     return res.ok(comment)
 
 app.all(posts_node)
