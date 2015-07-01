@@ -11,12 +11,12 @@ def logger(this, req, res):
 
 @app.get(u('index'))
 def index(this, req, res):
-    res.push("/INDEX")
+    return res.ok("/INDEX")
 
 @app.get(u('app/').all(
     lambda this, req, res: ('id' in req.session or (_ for _ in ()).throw(res.redirect('/index')))
 ))
 def appindex(this, req, res):
-    res.push("/APP/")
+    return res.ok("/APP/")
 
 app.run()

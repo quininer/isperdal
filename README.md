@@ -17,7 +17,7 @@ Route
     # callback
     u('/').all(
         lambda this, req, res:
-            res.push("Hello world.")
+            res.ok("Hello world.")
     ).run()
 
 
@@ -26,7 +26,7 @@ Route
 
     @app.all
     def foo(this: str, req: Request, res: Response):
-        res.push("Hello world.")
+        return res.ok("Hello world.")
 
     app.run()
 
@@ -39,7 +39,7 @@ Route
     # callback
     '/'.all(
         lambda this, req, res:
-            res.push("Hello world.")
+            res.ok("Hello world.")
     ).run()
 
 
@@ -48,9 +48,60 @@ Route
 
     @app.all
     def foo(this: str, req: Request, res: Response):
-        res.push("Hello world.")
+        return res.ok("Hello world.")
 
     app.run()
+
+----------
+
+认为URL应该是一棵树，
+对空中阁楼形式的URL不友好。
+
+                 "/"
+                 / \
+                /   \
+           assets/   posts/
+            /  |       | \
+           /   |       |  \
+         img  css     (1  (2
+                       X    \
+                      / \    \
+                      comment/  ---> POST
+                    /     \    \
+                  (1      (2    (1
+
+----------
+
+    from isperdal import microwave as u
+
+    app = u('/')
+    posts_node = app.all(u('posts/'))
+
+    @app.get(u('assets/').all(u(':path')))
+    def assets(this, req, res):
+        return res.file('/path/to/your', res.rest['path'])
+
+    @posts_node.get(u(':pid'))
+    def get_posts(this, req, res):
+        body = (await db.query(req.rest['pid']).body)
+        return res.ok(body)
+
+    @posts_node.post(u(':pid/').then(u('comment')))
+    def add_comment(this, req, res):
+        status = (await db.query(req.rest['pid']).update(req.body))
+        return res.ok(body)
+
+    @posts_node.get(u(':pid/').then(u('comment/').then(u(':cid'))))
+    def get_comment(this, req, res):
+        comment = (await db.query(req.rest['pid']).query(req.rest['cid'].comment))
+        return res.ok(comment)
+
+    app.all(posts_node)
+    app.run()
+
+**完全不推荐使用无状态的REST**
+
+**完全不打算支持正则URL**
 
 Middleware
 ----------
@@ -59,33 +110,8 @@ Middleware
 非 wsgi 中间件，
 本质上不区分 Middleware 与 APP。
 
-    # callback
-    '/'.all(lambda this, req, res: print("logger {} {}".format(req.method, req.uri)))\
-        .get('index')(lambda this, req, res: res.push("/INDEX"))\
-        .get('app/'.all(
-            lambda this, req, res: ('id' in req.session or (_ for _ in ()).throw(res.redirect('/index')))
-        ))(lambda this, req, res: res.push("/APP/"))\
-        .run()
-
-
-    # decorator
-    app = '/'
-
-    @app.all
-    def logger(this, req, res):
-        print("logger {} {}".format(req.method, req.uri))
-
-    @app.get('index')
-    def index(this, req, res):
-        res.push("/INDEX")
-
-    @app.get('app/'.all(
-        lambda this, req, res: ('id' in req.session or (_ for _ in ()).throw(res.redirect('/index')))
-    ))
-    def appindex(this, req, res):
-        res.push("/APP/")
-
-    app.run()
+[callback](/examples/app.callback.py)
+[decorator](/examples/app.decorator.py)
 
 Status
 ------

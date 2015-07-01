@@ -5,5 +5,5 @@ from isperdal import painting
 
 '/'.all(
     lambda this, req, res:
-        res.push("Hello world.")
+        res.ok("Hello world.")
 ).run()
