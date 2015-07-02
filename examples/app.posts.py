@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from isperdal import microwave as u
+from isperdal import Microwave as u
 from database import db
 
 app = u('/')

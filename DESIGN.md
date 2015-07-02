@@ -3,7 +3,7 @@ forbiddenfruit
 
 Normal
 
-    from isperdal import microwave as u
+    from isperdal import Microwave as u
 
     # callback
     u('/').all(
@@ -74,27 +74,16 @@ Route
 返回响应
 --------
 
-1. 判断每个节点函数返回值，若是`Ok`类的实例，则中断迭代返回`res`
-    - 可以用`dict`储存路由
-    - 不能使用放置在后面的中间件
+节点间进行有序迭代，当函数返回`Ok`或`Err`实例时，跳出节点迭代。
 
-2. 完成所有节点迭代，返回最终的`res`
-    - 容易混淆末节点
-    - 需要用`list`路由
+* 参考自 `Rust` ??
 
 多路由绑定
 ----------
 
-1. bottle like 风格绑定
+多参数
 
-        @app.get(u('/'))
-        @app.get(u('/index'))
-        def index(this, req, res):
-            pass
-
-2. 或许可以支持多参数?
-
-        @app.get(u('/'), u('/index'))
+        @app.all(u('/'), u('index'), methods=('get', 'post'))
         def index(this, req, res):
             pass
 
@@ -108,12 +97,45 @@ Middleware
 * [callback](/examples/app.callback.py#L9)
 * [decorator](/examples/app.decorator.py#L17)
 
-Status
-------
+Status WebSocket
+----------------
 
-pass
+连接即对象的状态友好模式。
+
+    @app.socket(u('websocket'))
+    class websocket(object):
+
+        def on_connect(self):
+            if 'id' not in self.req.session:
+                raise res.err(403)
+            self.transport.send("You are successfully connected")
+
+        def on_message(self, message):
+            self.transport.send(message)
+
+        def on_close(self, exc=None):
+            print("Connection closed")
+
+* 参考自 `Vase`
 
 plugins
 -------
 
-pass
+中间件形式的插件
+
+    from isperdal import Microwave as u
+    from isperdal.ext import logger, cookie, session, csrftoken
+
+    app = u('/')
+
+    app.all(logger)
+    app.all(cookie)
+    app.all(session)
+
+    @app.post(u('post').all(csrftoken))
+    def post(this, req, res):
+        pass
+
+    app.run()
+
+* 参考自 `expressjs`
