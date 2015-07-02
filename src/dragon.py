@@ -1,18 +1,10 @@
-class Ok(object):
-    pass
-
-class Err(Exception):
-    pass
-
 class Request(object):
-
     headers = {}
 
     def __init__(self):
         pass
 
 class Response(object):
-
     headers = {}
 
     def __init__(self):

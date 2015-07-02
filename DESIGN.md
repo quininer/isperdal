@@ -124,7 +124,7 @@ plugins
 中间件形式的插件
 
     from isperdal import Microwave as u
-    from isperdal.ext import logger, cookie, session, csrftoken
+    from isperdal.middleware import logger, cookie, session, csrftoken
 
     app = u('/')
 
