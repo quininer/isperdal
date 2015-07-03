@@ -1,16 +1,14 @@
-from types import FunctionType
-
 class ServerAdapter(object):
     def __init__(self, host: str="127.0.0.1", port: int=8000, debug: bool=True):
         self.host = host
         self.port = port
         self.debug = debug
 
-    def run(self, handler: FunctionType):
+    def run(self, handler):
         pass
 
 class AioHTTPServerAdapter(ServerAdapter):
-    def run(self, handler: FunctionType):
+    def run(self, handler):
         import asyncio
         from aiohttp.wsgi import WSGIServerHttpProtocol
 

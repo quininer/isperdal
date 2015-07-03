@@ -1,104 +1,104 @@
-from typing import TypeVar, Any
+from typing import TypeVar, Any, Callable
 
 T = TypeVar('T')
 N = TypeVar('N', Any, None)
 
 class Ok(object):
     """
-    Result Ok,
+    Result,
         from Rust.
     """
 
     def __init__(self, target: T) -> None:
-        '''
+        """
         >>> Ok(1)
         Ok<1>
         >>> Err('str')
         Err<'str'>
-        '''
+        """
         self.target = target
 
     def __repr__(self) -> str:
-        return "{}<{}>".format(type(self).__name__, repr(self.target))
+        return "{}<{!r}>".format(type(self).__name__, self.target)
 
     def unwrap(self) -> T:
-        '''
+        """
         >>> Ok(1).unwrap()
         1
-        '''
+        >>> Err(1).unwrap()
+        1
+        """
         return self.target
 
-    def unwrap_or(self, target) -> T:
-        '''
-        >>> Ok(1).unwrap_or(2)
-        1
-        >>> Err(1).unwrap_or(2)
-        2
-        '''
-        return self.unwrap() if self.is_ok() else target
-
     def is_ok(self) -> bool:
-        '''
+        """
         >>> Ok(1).is_ok()
         True
         >>> Err(1).is_ok()
         False
-        '''
+        """
         return type(self) == Ok
 
     def is_err(self) -> bool:
-        '''
+        """
         >>> Err(1).is_err()
         True
         >>> Ok(1).is_err()
         False
-        '''
+        """
         return type(self) == Err
 
     def ok(self) -> N:
-        '''
+        """
         >>> Ok(1).ok()
         1
         >>> Err(1).ok()
-        '''
+        """
         return self.unwrap() if self.is_ok() else None
 
     def err(self) -> N:
-        '''
+        """
         >>> Err(1).err()
         1
         >>> Ok(1).err()
-        '''
+        """
         return self.unwrap() if self.is_err() else None
 
-    def map(self, fn) -> Any:
-        '''
+    def map(self, fn: Callable[[T], Any]) -> Any:
+        """
         >>> Ok(1).map(lambda i: i+1)
         2
         >>> Err(1).map(lambda i: i+1)
         2
-        '''
+        """
         return fn(self.unwrap())
 
-    def map_err(self, fn) -> Any:
-        '''
-        >>> Ok(1).map_err(lambda i: i+1)
+    def map_err(self, fn: Callable[[T], Any]) -> Any:
+        """
+        >>> Ok(1).map_err(lambda i: Err(i+1))
         Ok<1>
-        >>> Err(1).map_err(lambda i: i+1)
+        >>> Err(1).map_err(lambda i: Err(i+1))
         Err<2>
-        '''
-        return Err(fn(self.unwrap())) if self.is_err() else self
+        """
+        return fn(self.unwrap()) if self.is_err() else self
 
-    def and_then(self, fn) -> Any:
-        '''
-        >>> Ok(1).and_then(lambda i: i+1)
+    def and_then(self, fn: Callable[[T], Any]) -> Any:
+        """
+        >>> Ok(1).and_then(lambda i: Ok(i+1))
         Ok<2>
-        >>> Err(1).and_then(lambda i: i+1)
+        >>> Err(1).and_then(lambda i: Ok(i+1))
         Err<1>
-        '''
-        return Ok(fn(self.unwrap())) if self.is_ok() else self
+        """
+        return fn(self.unwrap()) if self.is_ok() else self
 
 class Err(Ok, Exception):
+    """
+    >>> try:
+    ...     raise Err("err")
+    ... except Err as e:
+    ...     e
+    Err<'err'>
+    """
     pass
 
 Result = TypeVar('Result', Ok, Err)

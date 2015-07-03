@@ -1,4 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from .dragon import Microwave
+from main import Microwave
+from result import Result, Ok, Err
+
+def only(handle):
+    def only_wrap(this, req, res):
+        if not this.tree:
+            return handle(this, req, res)
+    return only_wrap

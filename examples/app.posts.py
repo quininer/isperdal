@@ -5,9 +5,9 @@ from isperdal import Microwave as u
 from database import db
 
 app = u('/')
-posts_node = app.all(u('posts/'))
+posts_node = app.then(u('posts/'))
 
-@app.get(u('assets/').all(u(':path')))
+@app.get(u('assets/').then(u(':path')))
 def assets(this, req, res):
     return res.file('/path/to/your', res.rest['path'])
 
