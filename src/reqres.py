@@ -1,17 +1,37 @@
-class Request(object):
-    headers = {}
+from .result import Ok, Err
 
-    def __init__(self):
-        pass
+status_code = {
+    200: '200 OK'
+}
+
+class Request(object):
+    def __init__(self, env):
+        self.env = env
+        self.method = env['REQUEST_METHOD'].upper()
+        self.path = env['PATH_INFO'].lower()
+        self.uri = env['RAW_URI']
+        self.body = env['wsgi.input']
+        self.next = (
+            lambda path: ["{}/".format(x) for x in path[:-1]]+path[-1:]
+        )(self.path.split('/'))
 
 class Response(object):
-    headers = {}
+    def __init__(self, start_res):
+        self.start_res = start_res
+        self.headers = {}
+        self.body = b""
+        self.status = 200
 
-    def __init__(self):
-        pass
+    def format(self):
+#       TODO
+        return [('Content-Type', 'text/html')]
 
-    def ok():
-        pass
+    def ok(self, T=None):
+        self.start_res(
+            status_code[self.status],
+            self.format()
+        )
+        return Ok(T or self.body)
 
-    def err():
-        pass
+    def err(self, E):
+        return Err(E)

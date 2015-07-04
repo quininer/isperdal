@@ -1,15 +1,10 @@
-from typing import TypeVar, Any, Callable
-
-T = TypeVar('T')
-N = TypeVar('N', Any, None)
-
 class Ok(object):
     """
     Result,
         from Rust.
     """
 
-    def __init__(self, target: T) -> None:
+    def __init__(self, target):
         """
         >>> Ok(1)
         Ok<1>
@@ -21,7 +16,7 @@ class Ok(object):
     def __repr__(self) -> str:
         return "{}<{!r}>".format(type(self).__name__, self.target)
 
-    def unwrap(self) -> T:
+    def unwrap(self):
         """
         >>> Ok(1).unwrap()
         1
@@ -30,7 +25,7 @@ class Ok(object):
         """
         return self.target
 
-    def is_ok(self) -> bool:
+    def is_ok(self):
         """
         >>> Ok(1).is_ok()
         True
@@ -39,7 +34,7 @@ class Ok(object):
         """
         return type(self) == Ok
 
-    def is_err(self) -> bool:
+    def is_err(self):
         """
         >>> Err(1).is_err()
         True
@@ -48,7 +43,7 @@ class Ok(object):
         """
         return type(self) == Err
 
-    def ok(self) -> N:
+    def ok(self):
         """
         >>> Ok(1).ok()
         1
@@ -56,7 +51,7 @@ class Ok(object):
         """
         return self.unwrap() if self.is_ok() else None
 
-    def err(self) -> N:
+    def err(self):
         """
         >>> Err(1).err()
         1
@@ -64,7 +59,7 @@ class Ok(object):
         """
         return self.unwrap() if self.is_err() else None
 
-    def map(self, fn: Callable[[T], Any]) -> Any:
+    def map(self, fn):
         """
         >>> Ok(1).map(lambda i: i+1)
         2
@@ -73,7 +68,7 @@ class Ok(object):
         """
         return fn(self.unwrap())
 
-    def map_err(self, fn: Callable[[T], Any]) -> Any:
+    def map_err(self, fn):
         """
         >>> Ok(1).map_err(lambda i: Err(i+1))
         Ok<1>
@@ -82,7 +77,7 @@ class Ok(object):
         """
         return fn(self.unwrap()) if self.is_err() else self
 
-    def and_then(self, fn: Callable[[T], Any]) -> Any:
+    def and_then(self, fn):
         """
         >>> Ok(1).and_then(lambda i: Ok(i+1))
         Ok<2>
@@ -100,5 +95,3 @@ class Err(Ok, Exception):
     Err<'err'>
     """
     pass
-
-Result = TypeVar('Result', Ok, Err)

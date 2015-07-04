@@ -1,9 +1,7 @@
-# from .reqres import Request, Response
 from functools import reduce, partial
-
-status_code = {
-    200: '200 OK'
-}
+from .reqres import Request, Response
+from .adapter import adapter
+from .result import Ok, Err
 
 class Microwave(str):
     """
@@ -136,9 +134,9 @@ class Microwave(str):
 
         >>> app = Microwave('/')
         >>> @app.err(404)
-        ... def err404(this, req, res):
+        ... def err404(this, req, res, err):
         ...     return True
-        >>> app.codes[404](None, None, None)
+        >>> app.codes[404](None, None, None, None)
         True
         """
         def add_err(handle):
@@ -147,5 +145,29 @@ class Microwave(str):
             return self
         return add_err
 
-    def run(self, host, port, debug, server):
-        pass
+    def __handler(self, req, res):
+        try:
+            for handle in self.handles[req.method]:
+                result = handle(self, req, res)
+                if type(result) == Ok:
+                    return result.ok()
+                elif type(result) == Err:
+                    raise result
+        except Err as err:
+            return self.codes[err.err()](req, res)
+
+        if req.next:
+            nextnode = req.next.poo(0)
+            for node in filter((lambda n: n == nextnode), self.subnode):
+                result = node.__handler(req, res)
+                if result:
+                    return result
+
+        return res.body
+
+    def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
+        def application(env, start_res):
+            req, res = Request(env), Response(start_res)
+            return [self.__handler(req, res) if req.next.pop(0) == self else self.codes[404](req, res, None),]
+
+        adapter[server](host, port, debug).run(application)

@@ -27,3 +27,7 @@ class AioHTTPServerAdapter(ServerAdapter):
             loop.run_forever()
         except KeyboardInterrupt:
             loop.stop()
+
+adapter = {
+    'aiohttp': AioHTTPServerAdapter
+}
