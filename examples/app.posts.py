@@ -7,7 +7,7 @@ from database import db
 app = u('/')
 posts_node = app.then(u('posts/'))
 
-@app.get(u('assets/').then(u(':path')))
+@app.append(u('assets/'), u(':path'))
 def assets(this, req, res):
     return res.file('/path/to/your', res.rest['path'])
 
@@ -16,15 +16,14 @@ def get_posts(this, req, res):
     body = (yield from db.query(req.rest['pid']).body)
     return res.ok(body)
 
-@posts_node.post(u(':pid/').then(u('comment')))
+@posts_node.append(u(':pid/'), u('comment'), methods=('POST',))
 def add_comment(this, req, res):
     status = (yield from db.query(req.rest['pid']).update(req.body))
     return res.ok(status)
 
-@posts_node.get(u(':pid/').then(u('comment/').then(u(':cid'))))
+@posts_node.append(u(':pid/'), u('comment/'), u(':cid'), methods=('GET',))
 def get_comment(this, req, res):
     comment = (yield from db.query(req.rest['pid']).query(req.rest['cid'].comment))
     return res.ok(comment)
 
-app.all(posts_node)
 app.run()

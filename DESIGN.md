@@ -68,6 +68,12 @@ Route
     POST    /posts/1/comment
     GET     /posts/1/comment/2
 
+-----
+
+    @app.append(u('posts/'), u(':pid/'), u('comment/'), u(':cid'), methods=('GET',))
+    def postcomment(this, req, res):
+        pass
+
 * 完全不推荐使用无状态的REST
 * 完全不打算支持正则URL
 
