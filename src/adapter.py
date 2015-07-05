@@ -30,7 +30,18 @@ class AioHTTPServerAdapter(ServerAdapter):
 class PulsarServerAdapter(ServerAdapter):
     def run(self, handler):
         from pulsar.apps import wsgi
-        wsgi.WSGIServer(callable=handler).start()
+        from pulsar.apps.wsgi.middleware import middleware_in_executor, wait_for_body_middleware
+#       FIXME pulsar clone error, use copy
+
+        wsgi_handler = wsgi.WsgiHandler([
+            wait_for_body_middleware,
+            middleware_in_executor(handler)
+        ])
+
+        wsgi.WSGIServer(
+            callable=wsgi_handler,
+            bind="{}:{}".format(self.host, self.port)
+        ).start()
 
 adapter = {
     'aiohttp': AioHTTPServerAdapter,

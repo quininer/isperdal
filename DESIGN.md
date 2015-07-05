@@ -16,7 +16,7 @@ Normal
     app = u('/')
 
     @app.all
-    def foo(this: str, req: Request, res: Response):
+    def foo(this, req, res):
         return res.ok("Hello world.")
 
     app.run()
@@ -37,7 +37,7 @@ Magic
     app = '/'
 
     @app.all
-    def foo(this: str, req: Request, res: Response):
+    def foo(this, req, res):
         return res.ok("Hello world.")
 
     app.run()

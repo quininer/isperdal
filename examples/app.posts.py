@@ -14,16 +14,16 @@ def assets(this, req, res):
 @posts_node.get(u(':pid'))
 def get_posts(this, req, res):
     body = (yield from db.query(req.rest['pid']).body)
-    return res.ok(body)
+    return res.push(body).ok()
 
 @posts_node.append(u(':pid/'), u('comment'), methods=('POST',))
 def add_comment(this, req, res):
     status = (yield from db.query(req.rest['pid']).update(req.body))
-    return res.ok(status)
+    return res.push(status).ok()
 
 @posts_node.append(u(':pid/'), u('comment/'), u(':cid'), methods=('GET',))
 def get_comment(this, req, res):
     comment = (yield from db.query(req.rest['pid']).query(req.rest['cid'].comment))
-    return res.ok(comment)
+    return res.push(comment).ok()
 
 app.run()
