@@ -167,18 +167,18 @@ class Microwave(str):
         >>> res.err = (lambda err: Err(err))
 
         >>> Microwave('/').all(lambda this, req, res: res.ok(b"test"))._Microwave__handler(req, res)
-        b'test'
+        Ok<b'test'>
         >>> req.next = ['post/', '1']
         >>> Microwave('/').append(
         ...     Microwave('post/'), Microwave(':id')
         ... )(
         ...     lambda this, req, res: res.ok(req.rest['id'])
         ... )._Microwave__handler(req, res)
-        '1'
+        Ok<'1'>
         >>> Microwave('/').err(404)(lambda this, req, res, err: res.ok(err)).all(
         ...     lambda this, req, res: res.set_status(404).err(b"test")
         ... )._Microwave__handler(req, res)
-        b'test'
+        Ok<b'test'
         """
         try:
             if req.method not in self.handles:
