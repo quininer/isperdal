@@ -134,8 +134,7 @@ plugins
 
     app = u('/')
 
-    app.all(logger)
-    app.all(cookie, session)
+    app.all(logger).all(cookie).all(session)
 
     @app.post(u('post').all(csrftoken))
     def post(this, req, res):

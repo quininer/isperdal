@@ -9,7 +9,7 @@ app = u('/')
 def logger(this, req, res):
     print("logger {} {}".format(req.method, req.uri))
 
-@app.get(u('index'))
+@app.get(u(""), u('index'))
 def index(this, req, res):
     return res.ok("/INDEX")
 

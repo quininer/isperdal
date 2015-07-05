@@ -1,5 +1,5 @@
 class ServerAdapter(object):
-    def __init__(self, host: str="127.0.0.1", port: int=8000, debug: bool=True):
+    def __init__(self, host, port, debug):
         self.host = host
         self.port = port
         self.debug = debug

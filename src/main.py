@@ -146,6 +146,11 @@ class Microwave(str):
         return add_err
 
     def __handler(self, req, res):
+        """
+        handler request.
+
+        TODO 单元测试
+        """
         try:
             for handle in self.handles[req.method]:
                 result = handle(self, req, res)
@@ -153,21 +158,30 @@ class Microwave(str):
                     return result.ok()
                 elif type(result) == Err:
                     raise result
+
+            if req.next:
+                nextnode = req.next.pop(0)
+                for node in self.subnode:
+                    if len(node) >= 2 and node[0] == ":":
+                        req.rest[node[1:]] = nextnode
+                    elif nextnode != node:
+                        continue
+                    result = node.__handler(req, res)
+                    if result:
+                        return result
+
         except Err as err:
-            return self.codes[err.err()](req, res)
+            if res.status in self.codes:
+                return self.codes[res.status](req, res, err.err())
+            else:
+                raise err
 
-        if req.next:
-            nextnode = req.next.poo(0)
-            for node in filter((lambda n: n == nextnode), self.subnode):
-                result = node.__handler(req, res)
-                if result:
-                    return result
-
-        return res.body
+        return res.ok().ok()
 
     def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
         def application(env, start_res):
             req, res = Request(env), Response(start_res)
+            # TODO 按长分割
             return [self.__handler(req, res) if req.next.pop(0) == self else self.codes[404](req, res, None),]
 
         adapter[server](host, port, debug).run(application)
