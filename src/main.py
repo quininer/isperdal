@@ -1,4 +1,4 @@
-from functools import reduce, partial
+from functools import reduce
 from .reqres import Request, Response
 from .adapter import adapter
 from .result import Ok, Err
@@ -99,7 +99,7 @@ class Microwave(str):
 
         >>> app = Microwave('/')
         >>> app.append(Microwave('index/'), Microwave(':id'), methods=('GET',))(lambda: True)
-        ':id'
+        '/'
         >>> app.subnode[-1]
         'index/'
         >>> app.subnode[0].subnode[-1]
@@ -107,7 +107,14 @@ class Microwave(str):
         >>> app.subnode[0].subnode[0].handles['GET'][-1]()
         True
         """
-        return partial(reduce((lambda x,y: x.then(y)), nodes).all, methods=methods)
+        self = nodes[0]
+        def append_wrap(nodeall, methods):
+            def all_wrap(fn):
+                nodeall(fn, methods=methods)
+                return self
+            return all_wrap
+
+        return append_wrap(reduce((lambda x,y: x.then(y)), nodes).all, methods)
 
     def head(self, *nodes):
         return self.route(*nodes, methods=('HEAD',))
@@ -147,15 +154,40 @@ class Microwave(str):
 
     def __handler(self, req, res):
         """
-        handler request.
+        Request.
 
-        TODO 单元测试
+        >>> class test: pass
+        >>> req, res = test(), test()
+        >>> req.rest = {}
+        >>> req.next = []
+        >>> req.method = 'GET'
+        >>> res.status = 404
+        >>> res.set_status = (lambda code: res)
+        >>> res.ok = (lambda body: Ok(body))
+        >>> res.err = (lambda err: Err(err))
+
+        >>> Microwave('/').all(lambda this, req, res: res.ok(b"test"))._Microwave__handler(req, res)
+        b'test'
+        >>> req.next = ['post/', '1']
+        >>> Microwave('/').append(
+        ...     Microwave('post/'), Microwave(':id')
+        ... )(
+        ...     lambda this, req, res: res.ok(req.rest['id'])
+        ... )._Microwave__handler(req, res)
+        '1'
+        >>> Microwave('/').err(404)(lambda this, req, res, err: res.ok(err)).all(
+        ...     lambda this, req, res: res.set_status(404).err(b"test")
+        ... )._Microwave__handler(req, res)
+        b'test'
         """
         try:
+            if req.method not in self.handles:
+                res.set_status(400)
+                raise Err("Method can't understand.")
             for handle in self.handles[req.method]:
                 result = handle(self, req, res)
                 if type(result) == Ok:
-                    return result.ok()
+                    return result
                 elif type(result) == Err:
                     raise result
 
@@ -172,16 +204,15 @@ class Microwave(str):
 
         except Err as err:
             if res.status in self.codes:
-                return self.codes[res.status](req, res, err.err())
+                return self.codes[res.status](self, req, res, err.err())
             else:
                 raise err
 
-        return res.ok().ok()
+        return res.ok()
 
     def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
         def application(env, start_res):
             req, res = Request(env), Response(start_res)
-            # TODO 按长分割
-            return [self.__handler(req, res) if req.next.pop(0) == self else self.codes[404](req, res, None),]
+            return (self.__handler(req, res) if req.next.pop(0) == self else self.codes[400](req, res, "URI Error.")).ok()
 
         adapter[server](host, port, debug).run(application)

@@ -2,8 +2,12 @@ from .result import Ok, Err
 
 status_code = {
     200: '200 OK',
-    302: '302 Found'
+    302: '302 Found',
+    400: '400 Bad Request'
 }
+
+class DictProperty(object):
+    pass
 
 class Request(object):
     def __init__(self, env):
@@ -20,11 +24,20 @@ class Request(object):
         self.headers = {}
         self.rest = {}
 
+    def headers(self, name):
+        pass
+
+    def query(self, key=None):
+        pass
+
+    def parms(self, key=None):
+        pass
+
 class Response(object):
     def __init__(self, start_res):
         self.start_res = start_res
         self.headers = {}
-        self.body = ""
+        self.body = []
         self.status = 200
 
     def set_status(self, code):
@@ -40,17 +53,17 @@ class Response(object):
         return [('Content-Type', 'text/html')]
 
     def push(self, body):
-        self.body += body
+        self.body.append((lambda body: body.encode() if isinstance(body, str) else body)(body))
         return self
 
-    def ok(self, T=None):
+    def ok(self, T=None, wrap=True):
+        if wrap:
+            self.push(T)
         self.start_res(
             status_code[self.status],
             self.format()
         )
-        return Ok(
-            (lambda body: body.encode() if isinstance(body, str) else body )(T or self.body)
-        )
+        return Ok(self.body if wrap else T)
 
     def err(self, E):
         return Err(E)

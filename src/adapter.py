@@ -12,8 +12,7 @@ class AioHTTPServerAdapter(ServerAdapter):
         import asyncio
         from aiohttp.wsgi import WSGIServerHttpProtocol
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        loop = asyncio.get_event_loop()
 
         loop.run_until_complete(
             loop.create_server(
@@ -28,6 +27,12 @@ class AioHTTPServerAdapter(ServerAdapter):
         except KeyboardInterrupt:
             loop.stop()
 
+class PulsarServerAdapter(ServerAdapter):
+    def run(self, handler):
+        from pulsar.apps import wsgi
+        wsgi.WSGIServer(callable=handler).start()
+
 adapter = {
-    'aiohttp': AioHTTPServerAdapter
+    'aiohttp': AioHTTPServerAdapter,
+    'pulsar': PulsarServerAdapter
 }
