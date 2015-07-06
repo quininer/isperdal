@@ -2,11 +2,13 @@ from cgi import parse_qs
 
 from .result import Ok, Err
 
+
 status_code = {
     200: '200 OK',
     302: '302 Found',
     400: '400 Bad Request'
 }
+
 
 class Request(object):
     def __init__(self, env):
@@ -66,6 +68,7 @@ class Request(object):
             return value
         return None
 
+
 class Response(object):
     def __init__(self, start_res):
         self.start_res = start_res
@@ -80,15 +83,17 @@ class Response(object):
         return self
 
     def header(self, name, value=None):
-#       XXX
-#           有点糟糕，不能覆盖重复的header
+        # XXX
+        #   有点糟糕，不能覆盖重复的header
         if value is None:
             return [h for h in self.headers if h.upper() == name.upper()]
         self.headers.append((name, value))
         return self
 
     def push(self, body):
-        self.body.append((lambda body: body.encode() if isinstance(body, str) else body)(body))
+        self.body.append((
+            lambda body: body.encode() if isinstance(body, str) else body
+        )(body))
         return self
 
     def ok(self, T=None):

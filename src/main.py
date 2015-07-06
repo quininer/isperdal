@@ -3,6 +3,7 @@ from .reqres import Request, Response
 from .adapter import adapter
 from .result import Ok, Err
 
+
 class Microwave(str):
     """
     Microwave Node.
@@ -98,7 +99,9 @@ class Microwave(str):
         Add mutlt subnode, then..
 
         >>> app = Microwave('/')
-        >>> app.append(Microwave('index/'), Microwave(':id'), methods=('GET',))(lambda: True)
+        >>> app.append(
+        ...     Microwave('index/'), Microwave(':id'), methods=('GET',)
+        ... )(lambda: True)
         '/'
         >>> app.subnode[-1]
         'index/'
@@ -108,13 +111,17 @@ class Microwave(str):
         True
         """
         self = nodes[0]
+
         def append_wrap(nodeall, methods):
             def all_wrap(fn):
                 nodeall(fn, methods=methods)
                 return self
             return all_wrap
 
-        return append_wrap(reduce((lambda x,y: x.then(y)), nodes).all, methods)
+        return append_wrap(
+            reduce((lambda x, y: x.then(y)), nodes).all,
+            methods
+        )
 
     def head(self, *nodes):
         return self.route(*nodes, methods=('HEAD',))
@@ -166,7 +173,9 @@ class Microwave(str):
         >>> res.ok = (lambda body: Ok(body))
         >>> res.err = (lambda err: Err(err))
 
-        >>> Microwave('/').all(lambda this, req, res: res.push(b"test"))._Microwave__handler(req, res)
+        >>> Microwave('/').all(
+        ...     lambda this, req, res: res.push(b"test")
+        ... )._Microwave__handler(req, res)
         Ok<b'test'>
         >>> req.next = ['post/', '1']
         >>> Microwave('/').append(
@@ -176,7 +185,9 @@ class Microwave(str):
         ... )._Microwave__handler(req, res)
         Ok<'1'>
         >>> res.status_code = 404
-        >>> Microwave('/').err(404)(lambda this, req, res, err: res.ok(err)).all(
+        >>> Microwave('/').err(404)(
+        ...     lambda this, req, res, err: res.ok(err)
+        ... ).all(
         ...     lambda this, req, res: res.status(404).err(b"test")
         ... )._Microwave__handler(req, res)
         Ok<b'test'>
@@ -201,11 +212,12 @@ class Microwave(str):
             if req.next:
                 nextnode = req.next.pop(0)
                 for node in self.subnode:
-                    if len(node) >= 2 and node[0] == ":":
-                        if len(node) >=3 and node[:2] == ":!":
-                            req.rest[node[2:].rstrip('/')] = "".join([nextnode]+req.next)
-                        else:
-                            req.rest[node[1:].rstrip('/')] = nextnode.rstrip('/')
+                    if len(node) >= 3 and node[:2] == ":!":
+                        req.rest[
+                            node[2:].rstrip('/')
+                        ] = "".join([nextnode]+req.next)
+                    elif len(node) >= 2 and node[0] == ":":
+                        req.rest[node[1:].rstrip('/')] = nextnode.rstrip('/')
                     elif nextnode != node:
                         continue
                     result = node.__handler(req, res)
@@ -223,7 +235,9 @@ class Microwave(str):
     def __call__(self, env, start_res):
         req, res = Request(env), Response(start_res)
         return (
-            self.__handler(req, res) if req.next.pop(0) == self else self.codes[400](req, res, "URI Error.")
+            self.__handler(req, res)
+            if req.next.pop(0) == self else
+            self.codes[400](req, res, "URI Error.")
         ).ok()
 
     def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):

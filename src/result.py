@@ -86,6 +86,7 @@ class Ok(object):
         """
         return fn(self.unwrap()) if self.is_ok() else self
 
+
 class Err(Ok, Exception):
     """
     >>> try:
