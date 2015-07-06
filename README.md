@@ -3,17 +3,13 @@ isperdal
 
 a web framework.
 
-* 基于节点的路由分发
-* 良好的中间件支持
-* 状态友好的`WebSocket`接口
-
 example:
 
-    from isperdal import painting
+    from isperdal import Microwave as u
 
-    '/'.all(
+    u('/').all(
         lambda this, req, res:
-            res.ok("Hello world.")
+            res.push("Hello world.")
     ).run()
 
 reference

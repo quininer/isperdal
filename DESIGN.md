@@ -8,7 +8,7 @@ Normal
     # callback
     u('/').all(
         lambda this, req, res:
-            res.ok("Hello world.")
+            res.push("Hello world.").ok()
     ).run()
 
 
@@ -17,7 +17,7 @@ Normal
 
     @app.all
     def foo(this, req, res):
-        return res.ok("Hello world.")
+        return res.push("Hello world.").ok()
 
     app.run()
 
@@ -29,7 +29,7 @@ Magic
     # callback
     '/'.all(
         lambda this, req, res:
-            res.ok("Hello world.")
+            res.push("Hello world.").ok()
     ).run()
 
 
@@ -38,7 +38,7 @@ Magic
 
     @app.all
     def foo(this, req, res):
-        return res.ok("Hello world.")
+        return res.push("Hello world.").ok()
 
     app.run()
 
@@ -89,7 +89,7 @@ Route
 
 多参数
 
-        @app.all(u('/'), u('index'), methods=('get', 'post'))
+        @app.route(u('/'), u('index'), methods=('get', 'post'))
         def index(this, req, res):
             pass
 
@@ -109,8 +109,7 @@ Status WebSocket
 连接即对象的状态友好模式。
 
     @app.socket(u('websocket'))
-    class websocket(object):
-
+    class websocket(WebSocket):
         def on_connect(self):
             if 'id' not in self.req.session:
                 raise res.err(403)

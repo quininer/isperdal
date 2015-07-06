@@ -162,7 +162,7 @@ class Microwave(str):
         >>> req.next = []
         >>> req.method = 'GET'
         >>> res.status = 404
-        >>> res.set_status = (lambda code: res)
+        >>> res.status = (lambda code: res)
         >>> res.ok = (lambda body: Ok(body))
         >>> res.err = (lambda err: Err(err))
 
@@ -176,14 +176,13 @@ class Microwave(str):
         ... )._Microwave__handler(req, res)
         Ok<'1'>
         >>> Microwave('/').err(404)(lambda this, req, res, err: res.push(err).ok()).all(
-        ...     lambda this, req, res: res.set_status(404).err(b"test")
+        ...     lambda this, req, res: res.status(404).err(b"test")
         ... )._Microwave__handler(req, res)
         Ok<b'test'>
         """
         try:
             if req.method not in self.handles:
-                res.set_status(400)
-                raise Err("Method can't understand.")
+                raise res.status(400).err("Method can't understand.")
             for handle in self.handles[req.method]:
                 result = handle(self, req, res)
                 if type(result) == Ok:
@@ -195,7 +194,7 @@ class Microwave(str):
                 nextnode = req.next.pop(0)
                 for node in self.subnode:
                     if len(node) >= 2 and node[0] == ":":
-                        req.rest[node[1:]] = nextnode
+                        req.rest[node[1:].rstrip('/')] = nextnode.rstrip('/')
                     elif nextnode != node:
                         continue
                     result = node.__handler(req, res)
@@ -210,9 +209,9 @@ class Microwave(str):
 
         return res.ok()
 
-    def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
-        def application(env, start_res):
-            req, res = Request(env), Response(start_res)
-            return (self.__handler(req, res) if req.next.pop(0) == self else self.codes[400](req, res, "URI Error.")).ok()
+    def __call__(self, env, start_res):
+        req, res = Request(env), Response(start_res)
+        return (self.__handler(req, res) if req.next.pop(0) == self else self.codes[400](req, res, "URI Error.")).ok()
 
-        adapter[server](host, port, debug).run(application)
+    def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
+        adapter[server](host, port, debug).run(self)

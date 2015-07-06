@@ -10,6 +10,24 @@ status_code = {
 
 class Request(object):
     def __init__(self, env):
+        """
+        >>> from io import BytesIO
+        >>> req = Request({
+        ...     "REQUEST_METHOD": "GET",
+        ...     "QUERY_STRING": "bar=baz&foo[bar]=baz",
+        ...     "RAW_URI": "/?bar=baz&foo[bar]=baz",
+        ...     "PATH_INFO": "/",
+        ...     "HTTP_USER_AGENT": "Test",
+        ...     "wsgi.input": BytesIO()
+        ... })
+        >>> req.query("bar")
+        'baz'
+        >>> req.parms("foo")
+        >>> req.querys["foo[bar]"]
+        ['baz']
+        >>> req.header("user_agent")
+        'Test'
+        """
         self.env = env
         self.method = env['REQUEST_METHOD'].upper()
         self.path = env['PATH_INFO'].lower()
@@ -25,20 +43,6 @@ class Request(object):
     def query(self, name, num=0):
         """
         query method.
-
-        >>> from io import BytesIO
-        >>> req = Request({
-        ...     "REQUEST_METHOD": "GET",
-        ...     "QUERY_STRING": "bar=baz&foo[bar]=baz",
-        ...     "RAW_URI": "/?bar=baz&foo[bar]=baz",
-        ...     "PATH_INFO": "/",
-        ...     "wsgi.input": BytesIO()
-        ... })
-        >>> req.query("bar")
-        'baz'
-        >>> req.parms("foo")
-        >>> req.querys["foo[bar]"]
-        ['baz']
         """
         value = self.querys[name] if name in self.querys else None
         return value[num] if value else None
@@ -48,7 +52,7 @@ class Request(object):
         return self.env[name] if name in self.env else None
 
     def post(self, name, num=0):
-        # TODO 根据 content-type 解析 json/query/form
+        # TODO 根据 content type 解析 json/query/form/text/bytes
         pass
 
     def parms(self, name, num=0):
@@ -61,7 +65,6 @@ class Request(object):
         if value:
             return value
         return None
-
 
 class Response(object):
     def __init__(self, start_res):
@@ -77,6 +80,8 @@ class Response(object):
         return self
 
     def header(self, name, value=None):
+#       XXX
+#           有点糟糕，不能覆盖重复的header
         if value is None:
             return [h for h in self.headers if h.upper() == name.upper()]
         self.headers.append((name, value))
@@ -97,5 +102,5 @@ class Response(object):
         return Err(E)
 
     def redirect(self, url, *, code=302):
-        self.set_status(code)
+        self.status(code)
         return Err(url)

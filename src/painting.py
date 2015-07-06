@@ -1,4 +1,4 @@
 from forbiddenfruit import curse
-from dragon import microwave
+from . import Microwave
 
 # TODO
