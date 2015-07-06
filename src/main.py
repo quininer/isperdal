@@ -161,24 +161,32 @@ class Microwave(str):
         >>> req.rest = {}
         >>> req.next = []
         >>> req.method = 'GET'
-        >>> res.status = 404
         >>> res.status = (lambda code: res)
+        >>> res.push = (lambda body: Ok(body))
         >>> res.ok = (lambda body: Ok(body))
         >>> res.err = (lambda err: Err(err))
 
-        >>> Microwave('/').all(lambda this, req, res: res.push(b"test").ok())._Microwave__handler(req, res)
+        >>> Microwave('/').all(lambda this, req, res: res.push(b"test"))._Microwave__handler(req, res)
         Ok<b'test'>
         >>> req.next = ['post/', '1']
         >>> Microwave('/').append(
         ...     Microwave('post/'), Microwave(':id')
         ... )(
-        ...     lambda this, req, res: res.push(req.rest['id']).ok()
+        ...     lambda this, req, res: res.push(req.rest['id'])
         ... )._Microwave__handler(req, res)
         Ok<'1'>
-        >>> Microwave('/').err(404)(lambda this, req, res, err: res.push(err).ok()).all(
+        >>> res.status_code = 404
+        >>> Microwave('/').err(404)(lambda this, req, res, err: res.ok(err)).all(
         ...     lambda this, req, res: res.status(404).err(b"test")
         ... )._Microwave__handler(req, res)
         Ok<b'test'>
+        >>> req.next = ['assets/', 'file/', 'test.png']
+        >>> Microwave('/').append(
+        ...     Microwave('assets/'), Microwave(':!path')
+        ... )(
+        ...     lambda this, req, res: res.push(req.rest['path'])
+        ... )._Microwave__handler(req, res)
+        Ok<'file/test.png'>
         """
         try:
             if req.method not in self.handles:
@@ -194,7 +202,10 @@ class Microwave(str):
                 nextnode = req.next.pop(0)
                 for node in self.subnode:
                     if len(node) >= 2 and node[0] == ":":
-                        req.rest[node[1:].rstrip('/')] = nextnode.rstrip('/')
+                        if len(node) >=3 and node[:2] == ":!":
+                            req.rest[node[2:].rstrip('/')] = "".join([nextnode]+req.next)
+                        else:
+                            req.rest[node[1:].rstrip('/')] = nextnode.rstrip('/')
                     elif nextnode != node:
                         continue
                     result = node.__handler(req, res)
@@ -202,8 +213,8 @@ class Microwave(str):
                         return result
 
         except Err as err:
-            if res.status in self.codes:
-                return self.codes[res.status](self, req, res, err.err())
+            if res.status_code in self.codes:
+                return self.codes[res.status_code](self, req, res, err.err())
             else:
                 raise err
 
@@ -211,7 +222,9 @@ class Microwave(str):
 
     def __call__(self, env, start_res):
         req, res = Request(env), Response(start_res)
-        return (self.__handler(req, res) if req.next.pop(0) == self else self.codes[400](req, res, "URI Error.")).ok()
+        return (
+            self.__handler(req, res) if req.next.pop(0) == self else self.codes[400](req, res, "URI Error.")
+        ).ok()
 
     def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
         adapter[server](host, port, debug).run(self)

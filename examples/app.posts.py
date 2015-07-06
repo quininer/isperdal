@@ -3,13 +3,14 @@
 
 from isperdal import Microwave as u
 from database import db
+from os import path
 
 app = u('/')
 posts_node = app.then(u('posts/'))
 
-@app.append(u('assets/'), u(':path'))
+@app.append(u('assets/'), u(':!path'))
 def assets(this, req, res):
-    return res.file('/path/to/your', res.rest['path'])
+    return res.file(path.join('/path/to/your', res.rest['path']))
 
 @posts_node.get(u(':pid'))
 def get_posts(this, req, res):
