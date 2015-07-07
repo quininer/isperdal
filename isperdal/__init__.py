@@ -2,8 +2,6 @@
 # encoding: utf-8
 
 from .main import Microwave
-from .result import Ok, Err
-
 
 def only(handle):
     def only_wrap(this, req, res):

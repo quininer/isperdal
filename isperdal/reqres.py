@@ -1,6 +1,6 @@
 from cgi import parse_qs
 
-from .result import Ok, Err
+from .utils import Ok, Err, lazydict, lazy
 
 
 status_code = {
@@ -39,29 +39,30 @@ class Request(object):
             if 'PATH_INFO' in env and env['PATH_INFO'] else
             '/'
         )
-        self.uri = env['RAW_URI'] if 'RAW_URI' in env else None
-        self.body = env['wsgi.input'] if 'wsgi.input' in env else None
         self.next = (
             lambda path: ["{}/".format(x) for x in path[:-1]]+path[-1:]
         )(self.path.split('/'))
 
         self.rest = {}
-        self.querys = (
-            parse_qs(env['QUERY_STRING']) if 'QUERY_STRING' in env else None
-        )
 
-    def query(self, name, num=0):
-        """
-        query method.
-        """
-        value = self.querys[name] if name in self.querys else None
-        return value[num] if value else None
+    @lazy
+    def uri(self):
+        return self.env['RAW_URI'] if 'RAW_URI' in self.env else None
 
+    @lazy
+    def body(self):
+        return self.env['wsgi.input'] if 'wsgi.input' in self.env else None
+
+    @lazy
+    def query(self):
+        return parse_qs(self.env['QUERY_STRING']) if 'QUERY_STRING' in self.env else {}
+
+    @lazydict
     def header(self, name):
-        # FIXME 给我用带缓存的懒解析！
         name = "HTTP_{}".format(name.upper())
         return self.env[name] if name in self.env else None
 
+    @lazy
     def post(self, name, num=0):
         # TODO 根据 content type 解析 json/query/form/text/bytes
         pass
@@ -112,7 +113,7 @@ class Response(object):
     def err(self, E):
         return Err(E)
 
-    def redirect(self, url, *, code=302):
-        # FIXME 用 res.status 设置code
-        self.status(code)
+    def redirect(self, url):
+        if not (300 <= self.status_code < 400):
+            self.status(302)
         return Err(url)

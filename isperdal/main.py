@@ -1,7 +1,7 @@
 from functools import reduce
 from .reqres import Request, Response
 from .adapter import adapter
-from .result import Ok, Err
+from .utils import Ok, Err
 
 
 class Microwave(str):
