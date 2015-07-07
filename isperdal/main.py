@@ -215,9 +215,11 @@ class Microwave(str):
                     if len(node) >= 3 and node[:2] == ":!":
                         req.rest[
                             node[2:].rstrip('/')
-                        ] = "".join([nextnode]+req.next)
+                        ] = ["".join([nextnode]+req.next), ]
                     elif len(node) >= 2 and node[0] == ":":
-                        req.rest[node[1:].rstrip('/')] = nextnode.rstrip('/')
+                        req.rest[
+                            node[1:].rstrip('/')
+                        ] = [nextnode.rstrip('/'), ]
                     elif nextnode != node:
                         continue
                     result = node.__handler(req, res)

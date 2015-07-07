@@ -3,6 +3,7 @@
 
 from .main import Microwave
 
+
 def only(handle):
     def only_wrap(this, req, res):
         if not req.next:

@@ -34,11 +34,7 @@ class Request(object):
         self.method = (
             env['REQUEST_METHOD'].upper() if 'REQUEST_METHOD' in env else None
         )
-        self.path = (
-            env['PATH_INFO']
-            if 'PATH_INFO' in env and env['PATH_INFO'] else
-            '/'
-        )
+        self.path = env.get('PATH_INFO') or '/'
         self.next = (
             lambda path: ["{}/".format(x) for x in path[:-1]]+path[-1:]
         )(self.path.split('/'))
@@ -47,37 +43,33 @@ class Request(object):
 
     @lazy
     def uri(self):
-        return self.env['RAW_URI'] if 'RAW_URI' in self.env else None
+        return self.env.get('RAW_URI')
 
     @lazy
     def body(self):
-        return self.env['wsgi.input'] if 'wsgi.input' in self.env else None
+        return self.env.get('wsgi.input')
 
     @lazy
     def query(self):
-        return parse_qs(self.env['QUERY_STRING']) if 'QUERY_STRING' in self.env else {}
+        return parse_qs(self.env.get('QUERY_STRING'))
 
     @lazydict
     def header(self, name):
-        name = "HTTP_{}".format(name.upper())
-        return self.env[name] if name in self.env else None
+        return self.env.get("HTTP_{}".format(name.upper()))
 
     @lazy
-    def post(self, name, num=0):
+    def post(self, name):
         # TODO 根据 content type 解析 json/query/form/text/bytes
         pass
 
-    def parms(self, name, num=0):
-        # FIXME 这什么乱七八糟的...
-        if name in self.rest:
-            return self.rest[name]
-        value = self.query(name, num)
-        if value:
-            return value
-        value = self.post(name, num)
-        if value:
-            return value
-        return None
+    def parms(self, name):
+        # FIXME 统一返回格式
+        return (
+            self.rest.get(name) or
+            self.query.get(name) or
+            self.post[name] or
+            None
+        )
 
 
 class Response(object):
