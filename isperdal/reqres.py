@@ -63,10 +63,9 @@ class Request(object):
         pass
 
     def parms(self, name):
-        # FIXME 统一返回格式
         return (
             self.rest.get(name) or
-            self.query.get(name) or
+            (lambda q: q and q[-1])(self.query.get(name)) or
             self.post[name] or
             None
         )
