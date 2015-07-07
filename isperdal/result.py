@@ -1,4 +1,4 @@
-class Ok(object):
+class Result(object):
     """
     Result,
         from Rust.
@@ -87,7 +87,11 @@ class Ok(object):
         return fn(self.unwrap()) if self.is_ok() else self
 
 
-class Err(Ok, Exception):
+class Ok(Result):
+    pass
+
+
+class Err(Result, Exception):
     """
     >>> try:
     ...     raise Err("err")

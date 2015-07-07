@@ -31,16 +31,24 @@ class Request(object):
         'Test'
         """
         self.env = env
-        self.method = env['REQUEST_METHOD'].upper()
-        self.path = env['PATH_INFO'].lower()
-        self.uri = env['RAW_URI']
-        self.body = env['wsgi.input']
+        self.method = (
+            env['REQUEST_METHOD'].upper() if 'REQUEST_METHOD' in env else None
+        )
+        self.path = (
+            env['PATH_INFO']
+            if 'PATH_INFO' in env and env['PATH_INFO'] else
+            '/'
+        )
+        self.uri = env['RAW_URI'] if 'RAW_URI' in env else None
+        self.body = env['wsgi.input'] if 'wsgi.input' in env else None
         self.next = (
             lambda path: ["{}/".format(x) for x in path[:-1]]+path[-1:]
         )(self.path.split('/'))
 
         self.rest = {}
-        self.querys = parse_qs(env['QUERY_STRING'])
+        self.querys = (
+            parse_qs(env['QUERY_STRING']) if 'QUERY_STRING' in env else None
+        )
 
     def query(self, name, num=0):
         """
@@ -50,6 +58,7 @@ class Request(object):
         return value[num] if value else None
 
     def header(self, name):
+        # FIXME 给我用带缓存的懒解析！
         name = "HTTP_{}".format(name.upper())
         return self.env[name] if name in self.env else None
 
@@ -58,6 +67,7 @@ class Request(object):
         pass
 
     def parms(self, name, num=0):
+        # FIXME 这什么乱七八糟的...
         if name in self.rest:
             return self.rest[name]
         value = self.query(name, num)
@@ -72,7 +82,7 @@ class Request(object):
 class Response(object):
     def __init__(self, start_res):
         self.start_res = start_res
-        self.headers = []
+        self.headers = {}
         self.body = []
         self.status_code = 200
 
@@ -82,12 +92,8 @@ class Response(object):
         self.status = code
         return self
 
-    def header(self, name, value=None):
-        # XXX
-        #   有点糟糕，不能覆盖重复的header
-        if value is None:
-            return [h for h in self.headers if h.upper() == name.upper()]
-        self.headers.append((name, value))
+    def header(self, name, value):
+        self.headers[name] = value
         return self
 
     def push(self, body):
@@ -99,7 +105,7 @@ class Response(object):
     def ok(self, T=None):
         self.start_res(
             status_code[self.status_code],
-            self.headers
+            list(self.headers.items())
         )
         return Ok(self.body if T is None else T)
 
@@ -107,5 +113,6 @@ class Response(object):
         return Err(E)
 
     def redirect(self, url, *, code=302):
+        # FIXME 用 res.status 设置code
         self.status(code)
         return Err(url)

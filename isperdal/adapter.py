@@ -57,7 +57,15 @@ class PulsarServerAdapter(ServerAdapter):
 #         WSGIServer((self.host, self.port), handler).serve_forever()
 
 
+class WSGIRefServerAdapter(ServerAdapter):
+    def run(self, handler):
+        from wsgiref.simple_server import make_server
+
+        httpd = make_server(self.host, self.port, handler)
+        httpd.serve_forever()
+
 adapter = {
     'aiohttp': AioHTTPServerAdapter,
-    'pulsar': PulsarServerAdapter
+    'pulsar': PulsarServerAdapter,
+    'wsgiref': WSGIRefServerAdapter
 }
