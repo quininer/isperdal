@@ -1,4 +1,6 @@
+from asyncio import async, coroutine
 from functools import reduce
+
 from .reqres import Request, Response
 from .adapter import adapter
 from .utils import Result, Err
@@ -41,7 +43,7 @@ class Microwave(str):
             for node in nodes:
                 self.add(node)
                 for handle in handles:
-                    node.all(handle, methods)
+                    node.all(coroutine(handle), methods)
             return self
         return add_route
 
@@ -63,7 +65,7 @@ class Microwave(str):
         False
         """
         for method in methods or self.handles.keys():
-            self.handles[method.upper()].append(handle)
+            self.handles[method.upper()].append(coroutine(handle))
         return self
 
     def add(self, node):
@@ -155,10 +157,16 @@ class Microwave(str):
         """
         def add_err(handle):
             for code in codes:
-                self.codes[code] = handle
+                self.codes[code] = coroutine(handle)
             return self
         return add_err
 
+    @coroutine
+    def trigger(self, req, res, code, message):
+        result = yield from self.codes[code](req, res, message)
+        return result.ok()
+
+    @coroutine
     def __handler(self, req, res):
         """
         Request handle.
@@ -203,10 +211,10 @@ class Microwave(str):
             if req.method not in self.handles:
                 raise res.status(400).err("Method can't understand.")
             for handle in self.handles[req.method]:
-                result = handle(self, req, res)
+                result = yield from handle(self, req, res)
                 if isinstance(result, Result):
                     if result.is_ok():
-                        return result
+                        return result.ok()
                     else:
                         raise result
 
@@ -223,25 +231,26 @@ class Microwave(str):
                         ] = [nextnode.rstrip('/'), ]
                     elif nextnode != node:
                         continue
-                    result = node.__handler(req, res)
+                    result = yield from node.__handler(req, res)
                     if result:
                         return result
 
         except Err as err:
             if res.status_code in self.codes:
-                return self.codes[res.status_code](self, req, res, err.err())
+                result = yield from self.trigger(req, res, res.status_code, err.err())
+                return result
             else:
                 raise err
 
-        return res.ok()
+        return res.ok().ok()
 
     def __call__(self, env, start_res):
         req, res = Request(env), Response(start_res)
-        return (
+        return async(
             self.__handler(req, res)
             if req.next.pop(0) == self else
-            self.codes[400](req, res, "URI Error.")
-        ).ok()
+            self.trigger(req, res, 400, "URL Error.")
+        )
 
     def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
         adapter[server](host, port, debug).run(self)
