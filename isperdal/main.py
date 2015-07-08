@@ -1,7 +1,7 @@
 from functools import reduce
 from .reqres import Request, Response
 from .adapter import adapter
-from .utils import Ok, Err
+from .utils import Result, Err
 
 
 class Microwave(str):
@@ -128,7 +128,7 @@ class Microwave(str):
 
     def get(self, *nodes):
         """
-        Add GET method handles and node.
+        Add GET method handles to node.
 
         >>> app = Microwave('/')
         >>> @app.get(Microwave('index'))
@@ -161,7 +161,7 @@ class Microwave(str):
 
     def __handler(self, req, res):
         """
-        Request.
+        Request handle.
 
         >>> class test: pass
         >>> req, res = test(), test()
@@ -204,10 +204,11 @@ class Microwave(str):
                 raise res.status(400).err("Method can't understand.")
             for handle in self.handles[req.method]:
                 result = handle(self, req, res)
-                if type(result) == Ok:
-                    return result
-                elif type(result) == Err:
-                    raise result
+                if isinstance(result, Result):
+                    if result.is_ok():
+                        return result
+                    else:
+                        raise result
 
             if req.next:
                 nextnode = req.next.pop(0)

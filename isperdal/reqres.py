@@ -1,4 +1,6 @@
-from cgi import parse_qs
+from cgi import parse_qs, parse_multipart
+from json import loads
+from io import BytesIO
 
 from .utils import Ok, Err, lazydict, lazy
 
@@ -47,20 +49,31 @@ class Request(object):
 
     @lazy
     def body(self):
-        return self.env.get('wsgi.input')
+        return self.env.get('wsgi.input') or BytesIO()
 
     @lazy
     def query(self):
-        return parse_qs(self.env.get('QUERY_STRING'))
+        return parse_qs(self.env.get('QUERY_STRING'), keep_blank_values=True)
 
     @lazydict
     def header(self, name):
-        return self.env.get("HTTP_{}".format(name.upper()))
+        return self.env.get("HTTP_{}".format(name.replace('-', '_').upper()))
 
     @lazy
-    def post(self, name):
-        # TODO 根据 content type 解析 json/query/form/text/bytes
-        pass
+    def post(self):
+        self.body.seek(0)
+
+        return {
+            'json': (lambda body: loads(body.read().decode())),
+            'plain': (lambda body: body.read().decode()),
+            # XXX 统一输出格式
+            'form-data': (lambda body: parse_multipart(body.decode())), # XXX or cgi.FieldStorage
+            'x-www-form-urlencoded': (lambda body: parse_qs(body.read().decode(), keep_blank_values=True)),
+            'octet-stream': (lambda body: body),
+            None: (lambda body: None)
+        }[(
+            lambda c: c and c.split(';')[0].split('/')[-1].lower() or 'x-www-form-urlencoded'
+        )(self.header['Content-Type'])](self.body)
 
     def parms(self, name):
         return (
