@@ -50,11 +50,11 @@ class PulsarServerAdapter(ServerAdapter):
         ).start()
 
 #   :( Python2 is bad
-# class GeventServerAdapter(ServerAdapter):
-#     def run(self, handler):
-#         from gevent.pywsgi import WSGIServer
-#
-#         WSGIServer((self.host, self.port), handler).serve_forever()
+class GeventServerAdapter(ServerAdapter):
+    def run(self, handler):
+        from gevent.pywsgi import WSGIServer
+
+        WSGIServer((self.host, self.port), handler).serve_forever()
 
 
 class WSGIRefServerAdapter(ServerAdapter):
@@ -67,5 +67,6 @@ class WSGIRefServerAdapter(ServerAdapter):
 adapter = {
     'aiohttp': AioHTTPServerAdapter,
     'pulsar': PulsarServerAdapter,
+    'gevent': GeventServerAdapter,
     'wsgiref': WSGIRefServerAdapter
 }
