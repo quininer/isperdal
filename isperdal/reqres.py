@@ -2,7 +2,7 @@ from cgi import parse_qs, parse_multipart
 from json import loads
 from io import BytesIO
 
-from .utils import Ok, Err, lazydict, lazy
+from .utils import Ok, Err
 
 
 status_code = {
@@ -41,45 +41,78 @@ class Request(object):
             lambda path: ["{}/".format(x) for x in path[:-1]]+path[-1:]
         )(self.path.split('/'))
 
-        self.rest = {}
+        self._rest = {}
 
-    @lazy
+        (
+            self._uri, self._body, self._query, self._post
+        ) = [None, ]*4
+
+    @property
     def uri(self):
-        return self.env.get('RAW_URI')
+        if self._uri is None:
+            self._uri = self.env.get('RAW_URI')
+        return self._uri
 
-    @lazy
+    @property
     def body(self):
-        return self.env.get('wsgi.input') or BytesIO()
+        if self._body is None:
+            body = self.env.get('wsgi.input')
+            self._body = body or BytesIO()
+        self._body.seek(0)
+        return self._body
 
-    @lazy
-    def query(self):
-        return parse_qs(self.env.get('QUERY_STRING'), keep_blank_values=True)
+    def rest(self, name):
+        return self.rest.get(name)
 
-    @lazydict
+    def query(self, name):
+        if self._query is None:
+            self._query = {
+                x: y and y[-1] or ''
+                for x, y in parse_qs(
+                    self.env.get('QUERY_STRING'),
+                    keep_blank_values=True
+                ).items()
+            }
+        return self._query.get(name)
+
     def header(self, name):
         return self.env.get("HTTP_{}".format(name.replace('-', '_').upper()))
 
-    @lazy
-    def post(self):
-        self.body.seek(0)
-
-        return {
-            'json': (lambda body: loads(body.read().decode())),
-            'plain': (lambda body: body.read().decode()),
-            # XXX 统一输出格式
-            'form-data': (lambda body: parse_multipart(body.decode())), # XXX or cgi.FieldStorage
-            'x-www-form-urlencoded': (lambda body: parse_qs(body.read().decode(), keep_blank_values=True)),
-            'octet-stream': (lambda body: body),
-            None: (lambda body: None)
-        }[(
-            lambda c: c and c.split(';')[0].split('/')[-1].lower() or 'x-www-form-urlencoded'
-        )(self.header['Content-Type'])](self.body)
+    def post(self, name):
+        if self._post is None:
+            self._post = {
+                'json': (lambda body: loads(body.read().decode())),
+                # XXX 返回格式应该一致
+                # 'plain': (lambda body: body.read().decode()),
+                'form-data': (lambda body: {
+                    x: y and y[-1] or ''
+                    for x, y in parse_multipart(
+                        body.decode(),
+                        keep_blank_values=True
+                    ).items()
+                }),  # XXX or cgi.FieldStorage
+                'x-www-form-urlencoded': (lambda body: {
+                    x: y and y[-1] or ''
+                    for x, y in parse_qs(
+                        body.read().decode(),
+                        keep_blank_values=True
+                    ).items()
+                }),
+                'octet-stream': (lambda body: body),
+                None: (lambda body: None)
+            }[(
+                lambda c:
+                    c and
+                    c.split(';')[0].split('/')[-1].lower() or
+                    'x-www-form-urlencoded'
+            )(self.header('Content-Type'))](self.body)
+        return self._post.get(name)
 
     def parms(self, name):
         return (
             self.rest.get(name) or
-            (lambda q: q and q[-1])(self.query.get(name)) or
-            self.post[name] or
+            (lambda q: q and q[-1])(self.query(name)) or
+            self.post(name) or
             None
         )
 

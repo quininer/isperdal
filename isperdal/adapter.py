@@ -49,6 +49,7 @@ class PulsarServerAdapter(ServerAdapter):
             bind="{}:{}".format(self.host, self.port)
         ).start()
 
+
 #   :( Python2 is bad
 class GeventServerAdapter(ServerAdapter):
     def run(self, handler):
