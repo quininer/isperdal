@@ -16,11 +16,22 @@ class Microwave(str):
     def __init__(self, *args, **kwargs):
         self.subnode = []
         self.handles = {
-            'HEAD': [],
+            'OPTION': [],
             'GET': [],
-            'POST': []
+            'HEAD': [],
+            'POST': [],
+            'PUT': [],
+            'DELETE': [],
+            'TRACE': [],
+            'CONNECT': [],
+            'PATCH': []
         }
-        self.codes = {}
+        self.codes = {
+            '400': (
+                lambda this, req, res, err:
+                    res.push("400, {}".format(err))
+            ),
+        }
 
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
@@ -123,9 +134,6 @@ class Microwave(str):
             methods
         )
 
-    def head(self, *nodes):
-        return self.route(*nodes, methods=('HEAD',))
-
     def get(self, *nodes):
         """
         Add GET method handles to node.
@@ -138,6 +146,9 @@ class Microwave(str):
         True
         """
         return self.route(*nodes, methods=('GET',))
+
+    def head(self, *nodes):
+        return self.route(*nodes, methods=('HEAD',))
 
     def post(self, *nodes):
         return self.route(*nodes, methods=('POST',))

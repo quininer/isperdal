@@ -1,9 +1,8 @@
 from cgi import parse_qs, FieldStorage
-from json import loads
 from io import BytesIO
+from http.client import responses as res_status
 
 from .utils import Ok, Err
-
 
 status_code = {
     200: '200 OK',
@@ -83,15 +82,19 @@ class Request(object):
         if self._form is None:
             safe_env = {'QUERY_STRING': ''}
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-                if key in self.env: safe_env[key] = self.env.get(key)
-            fs = FieldStorage(fp=self.body, environ=safe_env, keep_blank_values=True)
+                if key in self.env: safe_env[key] = self.env[key]
+            fs = FieldStorage(
+                fp=self.body,
+                environ=safe_env,
+                keep_blank_values=True
+            )
             self._form = fs
         return self._form.getfirst(name)
 
     def parms(self, name):
         return (
             self.rest.get(name) or
-            (lambda q: q and q[-1])(self.query(name)) or
+            self.query(name) or
             self.form(name) or
             None
         )
@@ -122,7 +125,9 @@ class Response(object):
 
     def ok(self, T=None):
         self.start_res(
-            status_code[self.status_code],
+            (
+                lambda code: "{} {}".format(code, res_status.get(code) or 'Unknown')
+            )(self.status_code),
             list(self.headers.items())
         )
         return Ok(self.body if T is None else T)
