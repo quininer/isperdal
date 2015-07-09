@@ -1,4 +1,4 @@
-from cgi import parse_qs, parse_multipart
+from cgi import parse_qs, FieldStorage
 from json import loads
 from io import BytesIO
 
@@ -44,20 +44,17 @@ class Request(object):
         self._rest = {}
 
         (
-            self._uri, self._body, self._query, self._post
+            self._uri, self._body, self._query, self._form
         ) = [None, ]*4
 
     @property
     def uri(self):
-        if self._uri is None:
-            self._uri = self.env.get('RAW_URI')
-        return self._uri
+        return self.env.get('RAW_URI')
 
     @property
     def body(self):
         if self._body is None:
-            body = self.env.get('wsgi.input')
-            self._body = body or BytesIO()
+            self._body = self.env.get('wsgi.input') or BytesIO()
         self._body.seek(0)
         return self._body
 
@@ -76,43 +73,26 @@ class Request(object):
         return self._query.get(name)
 
     def header(self, name):
-        return self.env.get("HTTP_{}".format(name.replace('-', '_').upper()))
+        name = name.replace('-', '_').upper()
+        return (
+            self.env.get("HTTP_{}".format(name)) or
+            self.env.get(name)
+        )
 
-    def post(self, name):
-        if self._post is None:
-            self._post = {
-                'json': (lambda body: loads(body.read().decode())),
-                # XXX 返回格式应该一致
-                # 'plain': (lambda body: body.read().decode()),
-                'form-data': (lambda body: {
-                    x: y and y[-1] or ''
-                    for x, y in parse_multipart(
-                        body.decode(),
-                        keep_blank_values=True
-                    ).items()
-                }),  # XXX or cgi.FieldStorage
-                'x-www-form-urlencoded': (lambda body: {
-                    x: y and y[-1] or ''
-                    for x, y in parse_qs(
-                        body.read().decode(),
-                        keep_blank_values=True
-                    ).items()
-                }),
-                'octet-stream': (lambda body: body),
-                None: (lambda body: None)
-            }[(
-                lambda c:
-                    c and
-                    c.split(';')[0].split('/')[-1].lower() or
-                    'x-www-form-urlencoded'
-            )(self.header('Content-Type'))](self.body)
-        return self._post.get(name)
+    def form(self, name):
+        if self._form is None:
+            safe_env = {'QUERY_STRING': ''}
+            for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
+                if key in self.env: safe_env[key] = self.env.get(key)
+            fs = FieldStorage(fp=self.body, environ=safe_env, keep_blank_values=True)
+            self._form = fs
+        return self._form.getfirst(name)
 
     def parms(self, name):
         return (
             self.rest.get(name) or
             (lambda q: q and q[-1])(self.query(name)) or
-            self.post(name) or
+            self.form(name) or
             None
         )
 
