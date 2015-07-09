@@ -9,8 +9,6 @@ class Microwave(str):
     Microwave Node.
     > 奥塔究竟怎么设计我的喉咙的？
 
-    >>> Microwave("/")
-    '/'
     """
 
     def __init__(self, *args, **kwargs):
@@ -36,17 +34,6 @@ class Microwave(str):
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
         The basic route map.
-
-        >>> app = Microwave('/')
-        >>> @app.route(Microwave('index'))
-        ... def index(this, req, res):
-        ...     return True
-        >>> index
-        '/'
-        >>> app.subnode[-1]
-        'index'
-        >>> app.subnode[0].handles['GET'][-1](None, None, None)
-        True
         """
         def add_route(*handles):
             for node in nodes:
@@ -59,19 +46,6 @@ class Microwave(str):
     def all(self, handle, methods=None):
         """
         Add handle method for the node.
-
-        >>> app = Microwave('/')
-        >>> @app.all
-        ... def all(this, req, res):
-        ...     return True
-        >>> all
-        '/'
-        >>> app.handles['GET'] == app.handles['POST'] == app.handles['HEAD']
-        True
-        >>> app.handles['GET'][0](None, None, None)
-        True
-        >>> app.all((lambda: False), methods=['HEAD']).handles['HEAD'][-1]()
-        False
         """
         for method in methods or self.handles.keys():
             self.handles[method.upper()].append(handle)
@@ -80,14 +54,6 @@ class Microwave(str):
     def add(self, node):
         """
         Add a subnode.
-
-        >>> app = Microwave('/')
-        >>> app.add(Microwave('index'))
-        '/'
-        >>> app.subnode[0]
-        'index'
-        >>> len(app.subnode)
-        1
         """
         self.subnode.append(node)
         return self
@@ -95,12 +61,6 @@ class Microwave(str):
     def then(self, node):
         """
         Add a subnode, then..
-
-        >>> app = Microwave('/')
-        >>> app.then(Microwave('index'))
-        'index'
-        >>> app.then(Microwave('posts/')).then(Microwave(':id'))
-        ':id'
         """
         self.add(node)
         return node
@@ -108,18 +68,6 @@ class Microwave(str):
     def append(*nodes, methods=('HEAD', 'GET', 'POST')):
         """
         Add mutlt subnode, then..
-
-        >>> app = Microwave('/')
-        >>> app.append(
-        ...     Microwave('index/'), Microwave(':id'), methods=('GET',)
-        ... )(lambda: True)
-        '/'
-        >>> app.subnode[-1]
-        'index/'
-        >>> app.subnode[0].subnode[-1]
-        ':id'
-        >>> app.subnode[0].subnode[0].handles['GET'][-1]()
-        True
         """
         self = nodes[0]
 
@@ -137,13 +85,6 @@ class Microwave(str):
     def get(self, *nodes):
         """
         Add GET method handles to node.
-
-        >>> app = Microwave('/')
-        >>> @app.get(Microwave('index'))
-        ... def index(this, req, res):
-        ...     return True
-        >>> app.subnode[0].handles['GET'][0](None, None, None)
-        True
         """
         return self.route(*nodes, methods=('GET',))
 
@@ -156,13 +97,6 @@ class Microwave(str):
     def err(self, *codes):
         """
         Add Error handles.
-
-        >>> app = Microwave('/')
-        >>> @app.err(404)
-        ... def err404(this, req, res, err):
-        ...     return True
-        >>> app.codes[404](None, None, None, None)
-        True
         """
         def add_err(handle):
             for code in codes:
@@ -173,42 +107,6 @@ class Microwave(str):
     def __handler(self, req, res):
         """
         Request handle.
-
-        >>> class test: pass
-        >>> req, res = test(), test()
-        >>> req.rest = {}
-        >>> req.next = []
-        >>> req.method = 'GET'
-        >>> res.status = (lambda code: res)
-        >>> res.push = (lambda body: Ok(body))
-        >>> res.ok = (lambda body: Ok(body))
-        >>> res.err = (lambda err: Err(err))
-
-        >>> Microwave('/').all(
-        ...     lambda this, req, res: res.push(b"test")
-        ... )._Microwave__handler(req, res)
-        Ok<b'test'>
-        >>> req.next = ['post/', '1']
-        >>> Microwave('/').append(
-        ...     Microwave('post/'), Microwave(':id')
-        ... )(
-        ...     lambda this, req, res: res.push(req.rest['id'])
-        ... )._Microwave__handler(req, res)
-        Ok<'1'>
-        >>> res.status_code = 404
-        >>> Microwave('/').err(404)(
-        ...     lambda this, req, res, err: res.ok(err)
-        ... ).all(
-        ...     lambda this, req, res: res.status(404).err(b"test")
-        ... )._Microwave__handler(req, res)
-        Ok<b'test'>
-        >>> req.next = ['assets/', 'file/', 'test.png']
-        >>> Microwave('/').append(
-        ...     Microwave('assets/'), Microwave(':!path')
-        ... )(
-        ...     lambda this, req, res: res.push(req.rest['path'])
-        ... )._Microwave__handler(req, res)
-        Ok<'file/test.png'>
         """
         try:
             if req.method not in self.handles:
@@ -254,5 +152,8 @@ class Microwave(str):
             self.codes[400](req, res, "URI Error.")
         ).ok()
 
-    def run(self, host="127.0.0.1", port=8000, debug=True, ssl=False, server='aiohttp'):
+    def run(
+        self, host="127.0.0.1", port=8000,
+        debug=True, ssl=False, server='aiohttp'
+    ):
         adapter[server](host, port, debug, ssl).run(self)
