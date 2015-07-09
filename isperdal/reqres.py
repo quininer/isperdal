@@ -35,6 +35,7 @@ class Request(object):
         self.method = (
             env['REQUEST_METHOD'].upper() if 'REQUEST_METHOD' in env else None
         )
+        self.uri = env.get('RAW_URI')
         self.path = env.get('PATH_INFO') or '/'
         self.next = (
             lambda path: ["{}/".format(x) for x in path[:-1]]+path[-1:]
@@ -42,13 +43,7 @@ class Request(object):
 
         self._rest = {}
 
-        (
-            self._uri, self._body, self._query, self._form
-        ) = [None, ]*4
-
-    @property
-    def uri(self):
-        return self.env.get('RAW_URI')
+        (self._body, self._query, self._form) = [None, ]*3
 
     @property
     def body(self):

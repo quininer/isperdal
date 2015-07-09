@@ -254,5 +254,5 @@ class Microwave(str):
             self.codes[400](req, res, "URI Error.")
         ).ok()
 
-    def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
-        adapter[server](host, port, debug).run(self)
+    def run(self, host="127.0.0.1", port=8000, debug=True, ssl=False, server='aiohttp'):
+        adapter[server](host, port, debug, ssl).run(self)
