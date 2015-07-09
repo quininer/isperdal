@@ -1,8 +1,9 @@
 class ServerAdapter(object):
-    def __init__(self, host, port, debug):
+    def __init__(self, host, port, debug, ssl):
         self.host = host
         self.port = port
         self.debug = debug
+        self.ssl = ssl
 
     def run(self, handler):
         pass
@@ -18,7 +19,10 @@ class AioHTTPServerAdapter(ServerAdapter):
         loop.run_until_complete(
             loop.create_server(
                 lambda: WSGIServerHttpProtocol(
-                    handler, readpayload=True, debug=self.debug
+                    handler,
+                    readpayload=True,
+                    debug=self.debug,
+                    is_ssl=self.ssl
                 ),
                 self.host,
                 self.port
@@ -48,6 +52,7 @@ class PulsarServerAdapter(ServerAdapter):
             callable=wsgi_handler,
             bind="{}:{}".format(self.host, self.port)
         ).start()
+
 
 #   :( Python2 is bad
 class GeventServerAdapter(ServerAdapter):

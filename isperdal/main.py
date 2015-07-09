@@ -18,11 +18,22 @@ class Microwave(str):
     def __init__(self, *args, **kwargs):
         self.subnode = []
         self.handles = {
-            'HEAD': [],
+            'OPTION': [],
             'GET': [],
-            'POST': []
+            'HEAD': [],
+            'POST': [],
+            'PUT': [],
+            'DELETE': [],
+            'TRACE': [],
+            'CONNECT': [],
+            'PATCH': []
         }
-        self.codes = {}
+        self.codes = {
+            '400': (
+                lambda this, req, res, err:
+                    res.push("400, {}".format(err))
+            ),
+        }
 
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
@@ -125,9 +136,6 @@ class Microwave(str):
             methods
         )
 
-    def head(self, *nodes):
-        return self.route(*nodes, methods=('HEAD',))
-
     def get(self, *nodes):
         """
         Add GET method handles to node.
@@ -140,6 +148,9 @@ class Microwave(str):
         True
         """
         return self.route(*nodes, methods=('GET',))
+
+    def head(self, *nodes):
+        return self.route(*nodes, methods=('HEAD',))
 
     def post(self, *nodes):
         return self.route(*nodes, methods=('POST',))
@@ -222,11 +233,11 @@ class Microwave(str):
                 nextnode = req.next.pop(0)
                 for node in self.subnode:
                     if len(node) >= 3 and node[:2] == ":!":
-                        req.rest[
+                        req._rest[
                             node[2:].rstrip('/')
                         ] = ["".join([nextnode]+req.next), ]
                     elif len(node) >= 2 and node[0] == ":":
-                        req.rest[
+                        req._rest[
                             node[1:].rstrip('/')
                         ] = [nextnode.rstrip('/'), ]
                     elif nextnode != node:
@@ -252,5 +263,5 @@ class Microwave(str):
             self.trigger(req, res, 400, "URL Error.")
         )
 
-    def run(self, host="127.0.0.1", port=8000, debug=True, server='aiohttp'):
-        adapter[server](host, port, debug).run(self)
+    def run(self, host="127.0.0.1", port=8000, debug=True, ssl=False, server='aiohttp'):
+        adapter[server](host, port, debug, ssl).run(self)
