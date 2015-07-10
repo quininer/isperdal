@@ -1,7 +1,7 @@
 from functools import reduce
 from .reqres import Request, Response
 from .adapter import adapter
-from .utils import Result, Err
+from .utils import Result, Ok, Err
 
 
 class Microwave(str):
@@ -31,7 +31,7 @@ class Microwave(str):
             ),
             404: (
                 lambda this, req, res, err:
-                    res.push("400, {}".format(err))
+                    res.push("404, {}".format(err))
             ),
         }
 
@@ -129,28 +129,28 @@ class Microwave(str):
                     if len(node) >= 3 and node[:2] == ":!":
                         req._rest[
                             node[2:].rstrip('/')
-                        ] = ["".join([nextnode]+req.next), ]
+                        ] = "".join([nextnode]+req.next)
                     elif len(node) >= 2 and node[0] == ":":
                         req._rest[
                             node[1:].rstrip('/')
-                        ] = [nextnode.rstrip('/'), ]
+                        ] = nextnode.rstrip('/')
                     elif nextnode != node:
                         continue
                     result = node.__handler(req, res)
-                    if result:
+                    if isinstance(result, Ok):
                         return result
-
             if not res.body:
                 raise res.status(404).err("Not Found")
 
         except Err as err:
             if res.status_code in self.codes:
-                self.codes[res.status_code](self, req, res, err.err())
+                result = self.codes[res.status_code](self, req, res, err.err())
+                if isinstance(result, Ok):
+                    return result
             else:
                 raise err
 
         return res.ok()
-
 
     def __call__(self, env, start_res):
         req, res = Request(env), Response(start_res)
