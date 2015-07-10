@@ -25,7 +25,11 @@ class Microwave(str):
             'PATCH': []
         }
         self.codes = {
-            '400': (
+            400: (
+                lambda this, req, res, err:
+                    res.push("400, {}".format(err))
+            ),
+            404: (
                 lambda this, req, res, err:
                     res.push("400, {}".format(err))
             ),
@@ -136,13 +140,17 @@ class Microwave(str):
                     if result:
                         return result
 
+            if not res.body:
+                raise res.status(404).err("Not Found")
+
         except Err as err:
             if res.status_code in self.codes:
-                return self.codes[res.status_code](self, req, res, err.err())
+                self.codes[res.status_code](self, req, res, err.err())
             else:
                 raise err
 
         return res.ok()
+
 
     def __call__(self, env, start_res):
         req, res = Request(env), Response(start_res)

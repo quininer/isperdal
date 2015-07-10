@@ -86,10 +86,8 @@ class Response(object):
         self.body = []
         self.status_code = 200
 
-    def status(self, code=None):
-        if code is None:
-            return self.status
-        self.status = code
+    def status(self, code):
+        self.status_code = code
         return self
 
     def header(self, name, value):
