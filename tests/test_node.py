@@ -6,12 +6,15 @@ from isperdal.reqres import Request, Response
 from isperdal.utils import Result
 
 env = {
-    'REQUEST_METHOD': 'GET',
-    'PATH_INFO': '/'
+    'REQUEST_METHOD': "GET",
+    'PATH_INFO': "/"
 }
+
+
 def start_res(res_status, headers):
     assert isinstance(res_status, str)
     assert isinstance(headers, list)
+
 
 class TestNode:
     def setUp(self):

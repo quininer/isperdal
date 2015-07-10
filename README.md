@@ -1,6 +1,8 @@
 isperdal
 ========
 
+[![Build Status](https://travis-ci.org/quininer/isperdal.svg)](https://travis-ci.org/quininer/isperdal)
+
 a web framework.
 
 example:
