@@ -37,7 +37,7 @@ class Request(object):
     def query(self, name):
         if self._query is None:
             self._query = {
-                x: y and y[-1] or ''
+                x: y and y[0] or ''
                 for x, y in parse_qs(
                     self.env.get('QUERY_STRING'),
                     keep_blank_values=True
@@ -67,12 +67,7 @@ class Request(object):
         return self._form.getfirst(name)
 
     def parms(self, name):
-        return (
-            self.rest(name) or
-            self.query(name) or
-            self.form(name) or
-            None
-        )
+        return self.rest(name) or self.query(name) or self.form(name) or None
 
 
 class Response(object):

@@ -53,7 +53,7 @@ class TestReq:
         req = Request(dict(env, **{
             'QUERY_STRING': "foo=one&foo=two&foo[foo]=three"
         }))
-        assert req.query('foo') == 'two'
+        assert req.query('foo') == 'one'
         assert req.query('foo[foo]') == 'three'
 
     def test_header(self):
