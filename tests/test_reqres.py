@@ -105,6 +105,9 @@ class TestRes:
         assert self.res.status_code == 200
         assert self.res.status(500) is self.res
         assert self.res.status_code == 500
+        assert self.res.status_text is None
+        assert self.res.status(418, "I\"m a teapot") is self.res
+        assert self.res.status_text == "I\"m a teapot"
 
     def test_header(self):
         assert not self.res.headers

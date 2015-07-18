@@ -1,7 +1,7 @@
 from cgi import FieldStorage
 from urllib.parse import parse_qs
 from io import BytesIO
-from http.client import responses as res_status
+from http.client import responses as resps
 
 from .utils import Ok, Err
 
@@ -80,9 +80,11 @@ class Response(object):
         self.headers = {}
         self.body = []
         self.status_code = 200
+        self.status_text = None
 
-    def status(self, code):
+    def status(self, code, text=None):
         self.status_code = code
+        self.status_text = text
         return self
 
     def header(self, name, value):
@@ -90,17 +92,15 @@ class Response(object):
         return self
 
     def push(self, body):
-        self.body.append((
-            lambda body: body.encode() if isinstance(body, str) else body
-        )(body))
+        self.body.append(body.encode() if isinstance(body, str) else body)
         return self
 
     def ok(self, T=None):
         self.start_res(
-            (
-                lambda code:
-                    "{} {}".format(code, res_status.get(code) or 'Unknown')
-            )(self.status_code),
+            "{} {}".format(
+                self.status_code,
+                self.status_text or resps.get(self.status_code) or "Unknown"
+            ),
             list(self.headers.items())
         )
         return Ok(self.body if T is None else T)
