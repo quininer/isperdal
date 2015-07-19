@@ -86,6 +86,9 @@ class Microwave(str):
             methods
         )
 
+    def socket(self, *nodes):
+        pass
+
     def get(self, *nodes):
         """
         Add GET method handles to node.
