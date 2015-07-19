@@ -1,40 +1,19 @@
-from cgi import parse_qs, FieldStorage
+from cgi import FieldStorage
+from urllib.parse import parse_qs
 from io import BytesIO
-from http.client import responses as res_status
+from http.client import responses as resps
 
 from .utils import Ok, Err
 
-status_code = {
-    200: '200 OK',
-    302: '302 Found',
-    400: '400 Bad Request'
-}
-
 
 class Request(object):
+    """
+    Request class.
+    """
+
     def __init__(self, env):
-        """
-        >>> from io import BytesIO
-        >>> req = Request({
-        ...     "REQUEST_METHOD": "GET",
-        ...     "QUERY_STRING": "bar=baz&foo[bar]=baz",
-        ...     "RAW_URI": "/?bar=baz&foo[bar]=baz",
-        ...     "PATH_INFO": "/",
-        ...     "HTTP_USER_AGENT": "Test",
-        ...     "wsgi.input": BytesIO()
-        ... })
-        >>> req.query("bar")
-        'baz'
-        >>> req.parms("foo")
-        >>> req.querys["foo[bar]"]
-        ['baz']
-        >>> req.header("user_agent")
-        'Test'
-        """
         self.env = env
-        self.method = (
-            env['REQUEST_METHOD'].upper() if 'REQUEST_METHOD' in env else None
-        )
+        self.method = (env.get('REQUEST_METHOD') or 'GET').upper()
         self.uri = env.get('RAW_URI')
         self.path = env.get('PATH_INFO') or '/'
         self.next = (
@@ -53,12 +32,12 @@ class Request(object):
         return self._body
 
     def rest(self, name):
-        return self.rest.get(name)
+        return self._rest.get(name)
 
     def query(self, name):
         if self._query is None:
             self._query = {
-                x: y and y[-1] or ''
+                x: y and y[0] or ''
                 for x, y in parse_qs(
                     self.env.get('QUERY_STRING'),
                     keep_blank_values=True
@@ -77,7 +56,8 @@ class Request(object):
         if self._form is None:
             safe_env = {'QUERY_STRING': ''}
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-                if key in self.env: safe_env[key] = self.env[key]
+                if key in self.env:
+                    safe_env[key] = self.env[key]
             fs = FieldStorage(
                 fp=self.body,
                 environ=safe_env,
@@ -87,25 +67,24 @@ class Request(object):
         return self._form.getfirst(name)
 
     def parms(self, name):
-        return (
-            self.rest.get(name) or
-            self.query(name) or
-            self.form(name) or
-            None
-        )
+        return self.rest(name) or self.query(name) or self.form(name) or None
 
 
 class Response(object):
+    """
+    Response class.
+    """
+
     def __init__(self, start_res):
         self.start_res = start_res
         self.headers = {}
         self.body = []
         self.status_code = 200
+        self.status_text = None
 
-    def status(self, code=None):
-        if code is None:
-            return self.status
-        self.status = code
+    def status(self, code, text=None):
+        self.status_code = code
+        self.status_text = text
         return self
 
     def header(self, name, value):
@@ -113,16 +92,15 @@ class Response(object):
         return self
 
     def push(self, body):
-        self.body.append((
-            lambda body: body.encode() if isinstance(body, str) else body
-        )(body))
+        self.body.append(body.encode() if isinstance(body, str) else body)
         return self
 
     def ok(self, T=None):
         self.start_res(
-            (
-                lambda code: "{} {}".format(code, res_status.get(code) or 'Unknown')
-            )(self.status_code),
+            "{} {}".format(
+                self.status_code,
+                self.status_text or resps.get(self.status_code) or "Unknown"
+            ),
             list(self.headers.items())
         )
         return Ok(self.body if T is None else T)

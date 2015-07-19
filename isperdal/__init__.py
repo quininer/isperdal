@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from .main import Microwave
+from .node import Microwave
 
 
 def only(handle):

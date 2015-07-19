@@ -13,7 +13,7 @@ class Result(object):
         """
         self.target = target
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return "{}<{!r}>".format(type(self).__name__, self.target)
 
     def unwrap(self):
