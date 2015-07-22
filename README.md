@@ -9,7 +9,7 @@ example:
 
     from isperdal import Microwave as u
 
-    u('/').all(
+    u('/').all()(
         lambda this, req, res:
             res.push("Hello world.")
     ).run()

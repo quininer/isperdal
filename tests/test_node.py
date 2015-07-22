@@ -31,24 +31,28 @@ class TestNode:
         assert self.root.subnode.pop().handles['OPTION'].pop()()
 
     def test_all(self):
-        self.root.all(lambda: True)
+        self.root.all()(lambda: True)
         assert self.root.handles['OPTION']
         assert self.root.handles['GET']
 
         for h in self.root.handles.keys():
             assert self.root.handles[h].pop()()
 
-        self.root.all((lambda: True), methods=('GET',))
+        self.root.all(('GET',))(lambda: True)
         assert not self.root.handles['OPTION']
         assert self.root.handles['GET'].pop()()
 
+        self.root.all()((lambda: 1), (lambda: 2))
+        assert self.root.handles['GET'].pop()() == 2
+        assert self.root.handles['GET'].pop()() == 1
+
     def test_add(self):
-        index = u('index/').all(lambda: True)
+        index = u('index/').all()(lambda: True)
         self.root.add(index)
         assert self.root.subnode.pop().handles['GET'].pop()()
 
     def test_then(self):
-        self.root.then(u('index/')).then(u('test')).all(lambda: True)
+        self.root.then(u('index/')).then(u('test')).all()(lambda: True)
         assert self.root.subnode.pop().subnode.pop().handles['GET'].pop()
 
     def test_append(self):
@@ -72,7 +76,7 @@ class TestNode:
     def test_handler(self):
         req, res = Request(env), Response(start_res)
         assert req.next.pop(0) == '/'
-        result = u('/').all(
+        result = u('/').all()(
             lambda this, req, res:
                 res.push("Test.").ok()
         )._Microwave__handler(req, res)
@@ -104,7 +108,7 @@ class TestNode:
         result = u('/').err(500)(
             lambda this, req, res, err:
                 res.push(err).ok()
-        ).all(
+        ).all()(
             lambda this, req, res:
                 res.status(500).err("Test")
         )._Microwave__handler(req, res)

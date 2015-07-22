@@ -6,7 +6,7 @@ Normal
     from isperdal import Microwave as u
 
     # callback
-    u('/').all(
+    u('/').all()(
         lambda this, req, res:
             res.push("Hello world.").ok()
     ).run()
@@ -15,7 +15,7 @@ Normal
     # decorator
     app = u('/')
 
-    @app.all
+    @app.all()
     def foo(this, req, res):
         return res.push("Hello world.").ok()
 
@@ -27,7 +27,7 @@ Magic
     from isperdal import painting
 
     # callback
-    '/'.all(
+    '/'.all()(
         lambda this, req, res:
             res.push("Hello world.").ok()
     ).run()
@@ -36,7 +36,7 @@ Magic
     # decorator
     app = '/'
 
-    @app.all
+    @app.all()
     def foo(this, req, res):
         return res.push("Hello world.").ok()
 
@@ -133,9 +133,9 @@ plugins
 
     app = u('/')
 
-    app.all(logger).all(cookie).all(session)
+    app.all()(logger).all()(cookie).all()(session)
 
-    @app.post(u('post').all(csrftoken))
+    @app.post(u('post').all()(csrftoken))
     def post(this, req, res):
         pass
 

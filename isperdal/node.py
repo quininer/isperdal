@@ -42,18 +42,19 @@ class Microwave(str):
         def add_route(*handles):
             for node in nodes:
                 self.add(node)
-                for handle in handles:
-                    node.all(handle, methods)
+                node.all(methods)(*handles)
             return self
         return add_route
 
-    def all(self, handle, methods=None):
+    def all(self, methods=None):
         """
         Add handle method for the node.
         """
-        for method in methods or self.handles.keys():
-            self.handles[method.upper()].append(handle)
-        return self
+        def all_wrap(*handles):
+            for method in methods or self.handles.keys():
+                self.handles[method.upper()].extend(handles)
+            return self
+        return all_wrap
 
     def add(self, node):
         """
@@ -75,16 +76,10 @@ class Microwave(str):
         """
         self = nodes[0]
 
-        def append_wrap(nodeall, methods):
-            def all_wrap(fn):
-                nodeall(fn, methods=methods)
-                return self
-            return all_wrap
-
-        return append_wrap(
-            reduce((lambda x, y: x.then(y)), nodes).all,
-            methods
-        )
+        def append_wrap(*handles):
+            reduce((lambda x, y: x.then(y)), nodes).all(methods)(*handles)
+            return self
+        return append_wrap
 
     def socket(self, *nodes):
         pass
