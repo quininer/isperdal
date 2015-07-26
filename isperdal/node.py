@@ -1,4 +1,5 @@
 from functools import reduce
+
 from .reqres import Request, Response
 from .adapter import adapter
 from .utils import Result, Ok, Err

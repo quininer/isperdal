@@ -46,6 +46,9 @@ class TestReq:
         req._rest['foo'] = 'oof'
         assert req.rest('foo') == 'oof'
 
+        req._rest['中文'] = r'%E6%B5%8B%E8%AF%95'
+        assert req.rest('中文') == '测试'
+
     def test_query(self):
         req = Request(env)
         assert req.query('foo') is None

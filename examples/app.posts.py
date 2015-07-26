@@ -22,7 +22,7 @@ def add_comment(this, req, res):
     status = (yield from db.query(req.rest['pid']).update(req.body))
     return res.push(status).ok()
 
-@posts_node.append(u(':pid/'), u('comment/'), u(':cid'), methods=('GET',))
+@posts_node.append(*map(u, [':pid/', 'comment/', ':cid']), methods=('GET',))
 def get_comment(this, req, res):
     comment = (yield from db.query(req.rest['pid']).query(req.rest['cid'].comment))
     return res.push(comment).ok()

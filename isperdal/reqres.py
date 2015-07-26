@@ -1,5 +1,5 @@
 from cgi import FieldStorage
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote_plus
 from io import BytesIO
 from http.client import responses as resps
 
@@ -13,11 +13,11 @@ class Request(object):
 
     def __init__(self, env):
         self.env = env
-        self.method = (env.get('REQUEST_METHOD') or 'GET').upper()
+        self.method = (env.get('REQUEST_METHOD', 'GET')).upper()
         self.uri = env.get('RAW_URI')
-        self.path = env.get('PATH_INFO') or '/'
+        self.path = env.get('PATH_INFO', '/')
         self.next = (
-            lambda path: ["{}/".format(x) for x in path[:-1]]+path[-1:]
+            lambda path: ["{}/".format(p) for p in path[:-1]]+path[-1:]
         )(self.path.split('/'))
 
         self._rest = {}
@@ -32,7 +32,7 @@ class Request(object):
         return self._body
 
     def rest(self, name):
-        return self._rest.get(name)
+        return unquote_plus(self._rest.get(name, '')) or None
 
     def query(self, name):
         if self._query is None:
@@ -99,7 +99,7 @@ class Response(object):
         self.start_res(
             "{} {}".format(
                 self.status_code,
-                self.status_text or resps.get(self.status_code) or "Unknown"
+                self.status_text or resps.get(self.status_code, "Unknown")
             ),
             list(self.headers.items())
         )
