@@ -151,7 +151,9 @@ class Microwave(str):
 
         except Err as err:
             if res.status_code in self.codes:
-                result = yield from self.trigger(req, res, res.status_code, err.err())
+                result = yield from self.trigger(
+                    req, res, res.status_code, err.err()
+                )
                 if isinstance(result, Ok):
                     return result.ok()
             else:

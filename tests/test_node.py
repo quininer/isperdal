@@ -42,7 +42,9 @@ class TestNode:
         assert self.root.subnode[-1].handles['HEAD']
         assert (yield from self.root.subnode.pop().handles['GET'].pop()())
 
-        self.root.route(index, methods=('OPTION',))(asyncio.coroutine(lambda: True))
+        self.root.route(
+            index, methods=('OPTION',)
+        )(asyncio.coroutine(lambda: True))
         assert (yield from self.root.subnode.pop().handles['OPTION'].pop()())
 
     @aiotest
@@ -71,16 +73,28 @@ class TestNode:
     @aiotest
     def test_then(self):
         self.root.then(u('index/')).then(u('test')).all()(lambda: True)
-        assert (yield from self.root.subnode.pop().subnode.pop().handles['GET'].pop()())
+        assert (
+            yield from self.root.
+            subnode.pop().subnode.pop().
+            handles['GET'].pop()()
+        )
 
     @aiotest
     def test_append(self):
         self.root.append(u('index/'), u('test'))(lambda: True)
-        assert (yield from self.root.subnode.pop().subnode.pop().handles['GET'].pop()())
+        assert (
+            yield from self.root.
+            subnode.pop().subnode.pop().
+            handles['GET'].pop()()
+        )
 
         self.root.append(u('index/'), u('test'), methods=('GET',))(lambda: 1)
         assert not self.root.subnode[-1].subnode[-1].handles['OPTION']
-        assert (yield from self.root.subnode.pop().subnode.pop().handles['GET'].pop()())
+        assert (
+            yield from self.root.
+            subnode.pop().subnode.pop().
+            handles['GET'].pop()()
+        )
 
     @aiotest
     def test_get(self):

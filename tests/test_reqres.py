@@ -8,6 +8,7 @@ import asyncio
 from isperdal.reqres import Request, Response
 from isperdal.utils import Result, Err
 
+
 class fakeIO():
     def __init__(self, buffer=b''):
         self.buffer = BytesIO(buffer)
