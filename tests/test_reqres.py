@@ -9,7 +9,7 @@ from isperdal.reqres import Request, Response
 from isperdal.utils import Result, Err
 
 
-class fakeIO():
+class fakeStreamIO():
     def __init__(self, buffer=b''):
         self.buffer = BytesIO(buffer)
 
@@ -23,7 +23,7 @@ env = {
     'PATH_INFO': "/",
     'RAW_URI': "/",
     'QUERY_STRING': "",
-    'wsgi.input': fakeIO(),
+    'wsgi.input': fakeStreamIO(),
     'HTTP_USER_AGENT': "Mozilla",
     'REMOTE_ADDR': "127.0.0.1"
 }
@@ -55,7 +55,7 @@ class TestReq:
         assert isinstance((yield from req.body).read(), bytes)
 
         req = Request(dict(env, **{
-            'wsgi.input': fakeIO(b"bar=baz")
+            'wsgi.input': fakeStreamIO(b"bar=baz")
         }))
         assert (yield from req.body).tell() is 0
         assert (yield from req.body).read() == b'bar=baz'
@@ -99,7 +99,7 @@ class TestReq:
             'REQUEST_METHOD': "POST",
             'CONTENT_TYPE': "application/x-www-form-urlencoded",
             'CONTENT_LENGTH': "30",
-            'wsgi.input': fakeIO(b"foo=one&foo=two&foo[foo]=three")
+            'wsgi.input': fakeStreamIO(b"foo=one&foo=two&foo[foo]=three")
         }))
         assert (yield from req.form('foo')) == 'one'
         assert (yield from req.form('foo[foo]')) == 'three'
@@ -110,7 +110,7 @@ class TestReq:
                 "multipart/form-data; "
                 "boundary=----WebKitFormBoundaryhvj9Daa5OwrBBWG9",
             'CONTENT_LENGTH': "382",
-            'wsgi.input': fakeIO(
+            'wsgi.input': fakeStreamIO(
                 b'------WebKitFormBoundaryhvj9Daa5OwrBBWG9\r\n'
                 b'Content-Disposition: '
                 b'form-data; name="foo"; filename="test.txt"\r\n'
