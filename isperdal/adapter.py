@@ -20,7 +20,7 @@ class AioHTTPServerAdapter(ServerAdapter):
             loop.create_server(
                 lambda: WSGIServerHttpProtocol(
                     handler,
-                    readpayload=True,
+                    readpayload=False,
                     debug=self.debug,
                     is_ssl=self.ssl
                 ),

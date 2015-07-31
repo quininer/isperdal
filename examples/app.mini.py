@@ -3,7 +3,7 @@
 
 from isperdal import painting
 
-'/'.all(
+'/'.all()(
     lambda this, req, res:
         res.push("Hello world.").ok()
 ).run()

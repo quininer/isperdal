@@ -12,7 +12,10 @@ setup(
     author_email='quininer@live.com',
     url='https://github.com/quininer/isperdal',
     license='MIT',
-    long_description=open(path.join(path.split(path.abspath(__file__))[0], 'README.md')).read(),
+    long_description=open(path.join(
+        path.split(path.abspath(__file__))[0],
+        'README.md'
+    )).read(),
     packages=['isperdal'],
     requires=['aiohttp']
 )

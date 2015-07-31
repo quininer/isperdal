@@ -1,7 +1,8 @@
 from cgi import FieldStorage
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote_plus
 from io import BytesIO
 from http.client import responses as resps
+import asyncio
 
 from .utils import Ok, Err
 
@@ -13,27 +14,32 @@ class Request(object):
 
     def __init__(self, env):
         self.env = env
-        self.method = (env.get('REQUEST_METHOD') or 'GET').upper()
+        self.method = (env.get('REQUEST_METHOD', 'GET')).upper()
         self.uri = env.get('RAW_URI')
-        self.path = env.get('PATH_INFO') or '/'
+        self.path = env.get('PATH_INFO', '/')
         self.next = (
-            lambda path: ["{}/".format(x) for x in path[:-1]]+path[-1:]
+            lambda path: ["{}/".format(p) for p in path[:-1]]+path[-1:]
         )(self.path.split('/'))
+        self._body = self.env.get('wsgi.input')
+        self._body_cache = BytesIO()
 
         self._rest = {}
 
-        (self._body, self._query, self._form) = [None, ]*3
+        (self._query, self._form) = [None, ]*2
 
     @property
+    @asyncio.coroutine
     def body(self):
-        if self._body is None:
-            self._body = self.env.get('wsgi.input') or BytesIO()
-        self._body.seek(0)
-        return self._body
+        self._body_cache.seek(0, 2)
+        self._body_cache.write((yield from self._body.read()) or b'')
+        self._body_cache.seek(0)
+        return self._body_cache
 
+    @asyncio.coroutine
     def rest(self, name):
-        return self._rest.get(name)
+        return unquote_plus(self._rest.get(name, '')) or None
 
+    @asyncio.coroutine
     def query(self, name):
         if self._query is None:
             self._query = {
@@ -45,6 +51,7 @@ class Request(object):
             }
         return self._query.get(name)
 
+    @asyncio.coroutine
     def header(self, name):
         name = name.replace('-', '_').upper()
         return (
@@ -52,6 +59,7 @@ class Request(object):
             self.env.get(name)
         )
 
+    @asyncio.coroutine
     def form(self, name):
         if self._form is None:
             safe_env = {'QUERY_STRING': ''}
@@ -59,15 +67,21 @@ class Request(object):
                 if key in self.env:
                     safe_env[key] = self.env[key]
             fs = FieldStorage(
-                fp=self.body,
+                fp=(yield from self.body),
                 environ=safe_env,
                 keep_blank_values=True
             )
             self._form = fs
         return self._form.getfirst(name)
 
+    @asyncio.coroutine
     def parms(self, name):
-        return self.rest(name) or self.query(name) or self.form(name) or None
+        return (
+            (yield from self.rest(name)) or
+            (yield from self.query(name)) or
+            (yield from self.form(name)) or
+            None
+        )
 
 
 class Response(object):
@@ -99,7 +113,7 @@ class Response(object):
         self.start_res(
             "{} {}".format(
                 self.status_code,
-                self.status_text or resps.get(self.status_code) or "Unknown"
+                self.status_text or resps.get(self.status_code, "Unknown")
             ),
             list(self.headers.items())
         )
