@@ -1,5 +1,6 @@
-from asyncio import async, coroutine
+from asyncio import async, coroutine, Future
 from functools import reduce
+from inspect import isgenerator
 
 from .reqres import Request, Response
 from .adapter import adapter
@@ -144,7 +145,11 @@ class Microwave(str):
                     elif nextnode != node:
                         continue
                     result = yield from node.__handler(req, res)
-                    if isinstance(result, Ok):
+                    if (
+                        isinstance(result, Ok) or
+                        isinstance(result, Future) or
+                        isgenerator(result)
+                    ):
                         return result
             if not res.body:
                 raise res.status(404).err("Not Found")
@@ -154,7 +159,11 @@ class Microwave(str):
                 result = yield from self.trigger(
                     req, res, res.status_code, err.err()
                 )
-                if isinstance(result, Ok):
+                if (
+                    isinstance(result, Ok) or
+                    isinstance(result, Future) or
+                    isgenerator(result)
+                ):
                     return result.ok()
             else:
                 raise err

@@ -20,7 +20,7 @@ class Request(object):
         self.next = (
             lambda path: ["{}/".format(p) for p in path[:-1]]+path[-1:]
         )(self.path.split('/'))
-        self._body = self.env.get('wsgi.input')
+        self.stream = self.env.get('wsgi.input')
         self._body_cache = BytesIO()
 
         self._rest = {}
@@ -31,7 +31,7 @@ class Request(object):
     @asyncio.coroutine
     def body(self):
         self._body_cache.seek(0, 2)
-        self._body_cache.write((yield from self._body.read()) or b'')
+        self._body_cache.write((yield from self.stream.read()) or b'')
         self._body_cache.seek(0)
         return self._body_cache
 
