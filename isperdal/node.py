@@ -3,7 +3,7 @@ from functools import reduce
 from inspect import isgenerator
 
 from .reqres import Request, Response
-from .adapter import adapter
+from .adapter import AioHTTPServer
 from .utils import Result, Ok, Err
 
 
@@ -182,4 +182,4 @@ class Microwave(str):
         self, host="127.0.0.1", port=8000,
         debug=True, ssl=False, server='aiohttp'
     ):
-        adapter[server](host, port, debug, ssl).run(self)
+        AioHTTPServer(host, port, debug, ssl).run(self)
