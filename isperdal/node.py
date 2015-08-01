@@ -1,6 +1,5 @@
-from asyncio import async, coroutine, Future
+from asyncio import async, coroutine
 from functools import reduce
-from inspect import isgenerator
 
 from .reqres import Request, Response
 from .adapter import AioHTTPServer
@@ -15,6 +14,11 @@ class Microwave(str):
     """
 
     def __init__(self, *args, **kwargs):
+        """
+        init node.
+
+        + node          str.
+        """
         self.subnode = []
         self.handles = {
             'OPTION': [],
@@ -27,25 +31,32 @@ class Microwave(str):
             'CONNECT': [],
             'PATCH': []
         }
-        self.codes = {
-            400: coroutine(
-                lambda this, req, res, err:
-                    res.push("400, {}".format(err))
-            ),
-            404: coroutine(
-                lambda this, req, res, err:
-                    res.push("404, {}".format(err))
-            ),
-        }
+        self.codes = {}
+        self.codes[400] = self.codes[404] = coroutine(
+            lambda this, req, res, err:
+                res.push("{}".format(err))
+        )
 
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
         The basic route map.
+
+        + *nodes<node>          multiple node object.
+        + methods<tuple>        iterables, value is `self.handles` key.
+
+        - <function>    wrap function
+            + *handles      multiple handle function.
+                | this          node object.
+                | req           Request object.
+                | res           Response object.
+
+                @ Result object.
+
+            - self          self node.
         """
         def add_route(*handles):
             for node in nodes:
                 self.add(node)
-
                 node.all(methods)(*map(coroutine, handles))
             return self
         return add_route
@@ -53,9 +64,14 @@ class Microwave(str):
     def all(self, methods=None):
         """
         Add handle method for the node.
+
+        + methods<tuple>        iterables, value is `self.handles` key.
+
+        - <function>            wrap function
+            ...
         """
         def all_wrap(*handles):
-            for method in methods or self.handles.keys():
+            for method in (methods or self.handles.keys()):
                 self.handles[method.upper()].extend(map(coroutine, handles))
             return self
         return all_wrap
@@ -63,6 +79,10 @@ class Microwave(str):
     def add(self, node):
         """
         Add a subnode.
+
+        + node<node>            node object.
+
+        - self                  self node.
         """
         self.subnode.append(node)
         return self
@@ -70,13 +90,23 @@ class Microwave(str):
     def then(self, node):
         """
         Add a subnode, then..
+
+        + node<node>            node object.
+
+        - <node>                node.
         """
         self.add(node)
         return node
 
     def append(*nodes, methods=('HEAD', 'GET', 'POST')):
         """
-        Add mutlt subnode, then..
+        Add multiple subnode, then..
+
+        + *nodes<node>          multiple node object.
+        + methods<tuple>        iterables, value is `self.handles` key.
+
+        - <function>    wrap function
+            ...
         """
         self = nodes[0]
 
@@ -91,6 +121,11 @@ class Microwave(str):
     def get(self, *nodes):
         """
         Add GET method handles to node.
+
+        + *nodes<node>          multiple node object.
+
+        - <function>            wrap function
+            ...
         """
         return self.route(*nodes, methods=('GET',))
 
@@ -103,6 +138,19 @@ class Microwave(str):
     def err(self, *codes):
         """
         Add Error handles.
+
+        + *codes<int>           multiple status code.
+
+        - <function>    wrap function
+            + handle        handle function.
+                | this          node object.
+                | req           Request object.
+                | res           Response object.
+                | err           Error message.
+
+                @ Result object.
+
+            - self          self node.
         """
         def add_err(handle):
             for code in codes:
@@ -112,8 +160,19 @@ class Microwave(str):
 
     @coroutine
     def trigger(self, req, res, code, message):
+        """
+        Error trigger.
+            &asyncio
+
+        + req               Request object.
+        + res               Response object.
+        + code<int>         status code.
+        + err<T>            Error message.
+
+        - Result object.
+        """
         result = yield from self.codes[code](self, req, res, message)
-        return result.ok()
+        return result if isinstance(result, Ok) else res.ok()
 
     @coroutine
     def __handler(self, req, res):
@@ -127,7 +186,7 @@ class Microwave(str):
                 result = yield from handle(self, req, res)
                 if isinstance(result, Result):
                     if result.is_ok():
-                        return result.ok()
+                        return result
                     else:
                         raise result
 
@@ -145,12 +204,9 @@ class Microwave(str):
                     elif nextnode != node:
                         continue
                     result = yield from node.__handler(req, res)
-                    if (
-                        isinstance(result, Ok) or
-                        isinstance(result, Future) or
-                        isgenerator(result)
-                    ):
+                    if isinstance(result, Ok):
                         return result
+
             if not res.body:
                 raise res.status(404).err("Not Found")
 
@@ -159,24 +215,27 @@ class Microwave(str):
                 result = yield from self.trigger(
                     req, res, res.status_code, err.err()
                 )
-                if (
-                    isinstance(result, Ok) or
-                    isinstance(result, Future) or
-                    isgenerator(result)
-                ):
-                    return result.ok()
+                if isinstance(result, Ok):
+                    return result
             else:
                 raise err
 
-        return res.ok().ok()
+        return res.ok()
+
+    @staticmethod
+    @coroutine
+    def unok(fn):
+        return (yield from fn).ok()
 
     def __call__(self, env, start_res):
         req, res = Request(env), Response(start_res)
-        return async(
+        return async(self.unok(
             self.__handler(req, res)
             if req.next.pop(0) == self else
-            self.trigger(req, res, 400, "URL Error.")
-        )
+            self.trigger(
+                req, res, 400, "URL Error"
+            )
+        ))
 
     def run(
         self, host="127.0.0.1", port=8000,

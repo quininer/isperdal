@@ -6,6 +6,7 @@ from functools import wraps
 
 from isperdal import Microwave as u
 from isperdal.reqres import Request, Response
+from isperdal.utils import Ok
 
 env = {
     'REQUEST_METHOD': "GET",
@@ -27,7 +28,7 @@ def aiotest(fn):
 
 def start_res(res_status, headers):
     assert isinstance(res_status, str)
-    assert isinstance(headers, list)
+    assert isinstance(headers, type({}.items()))
 
 
 class TestNode:
@@ -112,39 +113,44 @@ class TestNode:
     def test_handler(self):
         req, res = Request(env), Response(start_res)
         assert req.next.pop(0) == '/'
-        result = (yield from u('/').all()(
+        result = u('/').all()(
             lambda this, req, res:
                 res.push("Test.").ok()
-        )._Microwave__handler(req, res))
+        )._Microwave__handler(req, res)
 
-        assert result == [b'Test.']
+        assert (yield from u.unok(result)) == [b'Test.']
 
         env['PATH_INFO'] = '/posts/1'
         req, res = Request(env), Response(start_res)
         assert req.next.pop(0) == '/'
-        result = (yield from u('/').append(u('posts/'), u(':id'))(
+        result = u('/').append(u('posts/'), u(':id'))(
             lambda this, req, res:
-                res.push((yield from req.rest('id'))).ok()
-        )._Microwave__handler(req, res))
-        assert result == [b'1']
+                res.push((yield from req.rest('id')))
+        )._Microwave__handler(req, res)
+        assert (yield from u.unok(result)) == [b'1']
 
         env['PATH_INFO'] = '/file/img/test.png'
         req, res = Request(env), Response(start_res)
         assert req.next.pop(0) == '/'
-        result = (yield from u('/').append(u('file/'), u('img/'), u(':!png'))(
+        result = u('/').append(u('file/'), u('img/'), u(':!png'))(
             lambda this, req, res:
                 res.push((yield from req.rest('png'))).ok()
-        )._Microwave__handler(req, res))
-        assert result == [b'test.png']
+        )._Microwave__handler(req, res)
+        assert (yield from u.unok(result)) == [b'test.png']
 
         env['PATH_INFO'] = '/error'
         req, res = Request(env), Response(start_res)
         assert req.next.pop(0) == '/'
-        result = (yield from u('/').err(500)(
+        result = u('/').err(500)(
             lambda this, req, res, err:
                 res.push(err).ok()
         ).all()(
             lambda this, req, res:
                 res.status(500).err("Test")
-        )._Microwave__handler(req, res))
-        assert result == [b'Test']
+        )._Microwave__handler(req, res)
+        assert (yield from u.unok(result)) == [b'Test']
+
+    @aiotest
+    def test_unok(self):
+        assert (yield from u.unok(asyncio.coroutine(lambda: Ok(True))()))
+        assert not (yield from u.unok(asyncio.coroutine(lambda: Ok(False))()))

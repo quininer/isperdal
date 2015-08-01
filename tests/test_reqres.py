@@ -42,9 +42,9 @@ def aiotest(fn):
 def start_res(res_status, headers):
     assert isinstance(res_status, str)
     assert int(res_status.split()[0])
-    assert isinstance(headers, list)
-    assert isinstance(headers[0][1], str)
-    assert isinstance(headers[-1][-1], str)
+    assert isinstance(headers, type({}.items()))
+    assert isinstance(list(headers)[0][1], str)
+    assert isinstance(list(headers)[-1][-1], str)
 
 
 class TestReq:
