@@ -46,7 +46,9 @@ class TestNode:
         self.root.route(
             index, methods=('OPTION',)
         )(lambda: 1)
-        assert (yield from self.root.subnode.pop().handles['OPTION'].pop()()) is 1
+        assert (
+            yield from self.root.subnode.pop().handles['OPTION'].pop()()
+        ) is 1
 
     @aiotest
     def test_all(self):
@@ -163,5 +165,9 @@ class TestNode:
 
     @aiotest
     def test_unok(self):
-        assert (yield from u.unok(asyncio.coroutine(lambda: Ok(True))())) is True
-        assert (yield from u.unok(asyncio.coroutine(lambda: Ok(False))())) is False
+        assert (
+            yield from u.unok(asyncio.coroutine(lambda: Ok(True))())
+        ) is True
+        assert (
+            yield from u.unok(asyncio.coroutine(lambda: Ok(False))())
+        ) is False
