@@ -34,7 +34,7 @@ class Microwave(str):
         self.codes = {}
         self.codes[400] = self.codes[404] = coroutine(
             lambda this, req, res, err:
-                res.push("{}".format(err))
+                res.push("{} {}".format(res.status_code, err))
         )
 
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
@@ -171,6 +171,7 @@ class Microwave(str):
 
         - Result object.
         """
+        res.status(code)
         result = yield from self.codes[code](self, req, res, message)
         return result if isinstance(result, Ok) else res.ok()
 
@@ -237,8 +238,5 @@ class Microwave(str):
             )
         ))
 
-    def run(
-        self, host="127.0.0.1", port=8000,
-        debug=True, ssl=False, server='aiohttp'
-    ):
+    def run(self, host="127.0.0.1", port=8000, debug=True, ssl=False):
         AioHTTPServer(host, port, debug, ssl).run(self)
