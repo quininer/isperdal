@@ -185,7 +185,9 @@ class Response(object):
 
         ...
         """
-        self.body.append(body.encode() if isinstance(body, str) else body)
+        body = body.encode() if isinstance(body, str) else body
+        bodys = (lambda b: [b[r:r+8192] for r in range(0, len(b), 8192)])(body)
+        self.body.extend(bodys)
         return self
 
     def ok(self, T=None):

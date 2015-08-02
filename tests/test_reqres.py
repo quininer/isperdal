@@ -149,6 +149,10 @@ class TestRes:
         assert self.res.push('push') is self.res
         assert self.res.body[-1] == b'push'
 
+        assert self.res.push('p'*8193) is self.res
+        assert self.res.body[-2] == b'p'*8192
+        assert self.res.body[-1] == b'p'
+
     def test_ok(self):
         result = self.res.header('X-Test', 'test too').ok()
         assert isinstance(result, Result)

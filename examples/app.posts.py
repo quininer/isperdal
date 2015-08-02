@@ -11,7 +11,7 @@ posts_node = app.then(u('posts/'))
 
 @app.append(u('assets/'), u(':!path'))
 def assets(this, req, res):
-    return res.file(path.join('/path/to/your', (yield from res.rest('path'))))
+    return res.file(path.join('/path/to/your', (yield from req.rest('path'))))
 
 @posts_node.get(u(':pid'))
 def get_posts(this, req, res):
