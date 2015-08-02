@@ -1,6 +1,7 @@
 import asyncio
 from aiohttp.wsgi import WSGIServerHttpProtocol
 
+
 class AioWSGIServerProtocol(WSGIServerHttpProtocol):
     @asyncio.coroutine
     def handle_request(self, message, payload):
@@ -8,6 +9,7 @@ class AioWSGIServerProtocol(WSGIServerHttpProtocol):
             pass
         else:
             yield from super().handle_request(message, payload)
+
 
 class AioHTTPServer(object):
     def __init__(self, host, port, debug, ssl):
