@@ -1,3 +1,14 @@
+import asyncio
+from aiohttp.wsgi import WSGIServerHttpProtocol
+
+class AioWSGIServerProtocol(WSGIServerHttpProtocol):
+    @asyncio.coroutine
+    def handle_request(self, message, payload):
+        if 'websocket' in message.headers.get('UPGRADE', "").lower():
+            pass
+        else:
+            yield from super().handle_request(message, payload)
+
 class AioHTTPServer(object):
     def __init__(self, host, port, debug, ssl):
         self.host = host
@@ -6,14 +17,12 @@ class AioHTTPServer(object):
         self.ssl = ssl
 
     def run(self, handler):
-        import asyncio
-        from aiohttp.wsgi import WSGIServerHttpProtocol
 
         loop = asyncio.get_event_loop()
 
         loop.run_until_complete(
             loop.create_server(
-                lambda: WSGIServerHttpProtocol(
+                lambda: AioWSGIServerProtocol(
                     handler,
                     readpayload=False,
                     debug=self.debug,

@@ -43,9 +43,11 @@ class Request(object):
         """
         if self._body is None:
             self._body = BytesIO()
+
         self._body.seek(0, 2)
         self._body.write((yield from self.stream.read()) or b"")
         self._body.seek(0)
+
         return self._body
 
     @coroutine
@@ -72,14 +74,12 @@ class Request(object):
         ...
         """
         if self._query is None:
-            self._query = {
-                x: (lambda f="", *_: f)(*y)
-                for x, y in parse_qs(
-                    self.env.get('QUERY_STRING'),
-                    keep_blank_values=True
-                ).items()
-            }
-        return self._query.get(name)
+            self._query = parse_qs(
+                self.env.get('QUERY_STRING'),
+                keep_blank_values=True
+            )
+
+        return (lambda f="", *_: f)(*self._query.get(name, [None]))
 
     @coroutine
     def header(self, name):
@@ -117,6 +117,7 @@ class Request(object):
                 keep_blank_values=True
             )
             self._form = fs
+
         return self._form.getfirst(name)
 
     @coroutine
@@ -185,9 +186,14 @@ class Response(object):
 
         ...
         """
-        body = body.encode() if isinstance(body, str) else body
-        bodys = (lambda b: [b[r:r+8192] for r in range(0, len(b), 8192)])(body)
-        self.body.extend(bodys)
+        if isinstance(body, str):
+            body = body.encode()
+
+        bodysplit = (
+            lambda b: [b[r:r+8192] for r in range(0, len(b), 8192)]
+        )(body)
+
+        self.body.extend(bodysplit)
         return self
 
     def ok(self, T=None):
