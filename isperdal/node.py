@@ -3,7 +3,7 @@ from functools import reduce
 
 from .reqres import Request, Response
 from .adapter import AioHTTPServer
-from .utils import Result, Ok, Err
+from .utils import Result, Ok, Err, unok
 
 
 class Microwave(str):
@@ -223,14 +223,9 @@ class Microwave(str):
 
         return res.ok()
 
-    @staticmethod
-    @coroutine
-    def unok(fn):
-        return (yield from fn).ok()
-
     def __call__(self, env, start_res):
         req, res = Request(env), Response(start_res)
-        return async(self.unok(
+        return async(unok(
             self.__handler(req, res)
             if req.next.pop(0) == self else
             self.trigger(

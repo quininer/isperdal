@@ -6,7 +6,7 @@ from functools import wraps
 
 from isperdal import Microwave as u
 from isperdal.reqres import Request, Response
-from isperdal.utils import Ok
+from isperdal.utils import unok
 
 env = {
     'REQUEST_METHOD': "GET",
@@ -122,7 +122,7 @@ class TestNode:
                 res.push("Test.").ok()
         )._Microwave__handler(req, res)
 
-        assert (yield from u.unok(result)) == [b'Test.']
+        assert (yield from unok(result)) == [b'Test.']
 
         # '/posts/q'
         env['PATH_INFO'] = '/posts/1'
@@ -134,7 +134,7 @@ class TestNode:
                 res.push((yield from req.rest('id')))
         )._Microwave__handler(req, res)
 
-        assert (yield from u.unok(result)) == [b'1']
+        assert (yield from unok(result)) == [b'1']
 
         # '/file/img/test.png'
         env['PATH_INFO'] = '/file/img/test.png'
@@ -146,7 +146,7 @@ class TestNode:
                 res.push((yield from req.rest('png'))).ok()
         )._Microwave__handler(req, res)
 
-        assert (yield from u.unok(result)) == [b'test.png']
+        assert (yield from unok(result)) == [b'test.png']
 
         # '/error'
         env['PATH_INFO'] = '/error'
@@ -161,13 +161,4 @@ class TestNode:
                 res.status(500).err("Test")
         )._Microwave__handler(req, res)
 
-        assert (yield from u.unok(result)) == [b'Test']
-
-    @aiotest
-    def test_unok(self):
-        assert (
-            yield from u.unok(asyncio.coroutine(lambda: Ok(True))())
-        ) is True
-        assert (
-            yield from u.unok(asyncio.coroutine(lambda: Ok(False))())
-        ) is False
+        assert (yield from unok(result)) == [b'Test']

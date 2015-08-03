@@ -1,3 +1,6 @@
+from asyncio import coroutine
+
+
 class Result(object):
     """
     Result,
@@ -100,3 +103,20 @@ class Err(Result, Exception):
     Err<'err'>
     """
     pass
+
+
+@coroutine
+def unok(fn):
+    """
+    >>> from asyncio import coroutine, get_event_loop
+    >>> loop = get_event_loop()
+    >>> loop.run_until_complete(unok(coroutine(
+    ...     lambda: Ok(True)
+    ... )()))
+    True
+    >>> loop.run_until_complete(unok(coroutine(
+    ...     lambda: Ok(False)
+    ... )()))
+    False
+    """
+    return (yield from fn).ok()

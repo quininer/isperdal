@@ -9,4 +9,4 @@ install:
 
 script:
   - pep8 isperdal tests
-  - nosetests -s -v
+  - nosetests --with-doctest -s -v
