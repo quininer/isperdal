@@ -1,7 +1,8 @@
 from asyncio import async, coroutine
 from functools import reduce
 
-from .reqres import Request, Response
+from .request import Request
+from .response import Response
 from .adapter import AioHTTPServer
 from .utils import Result, Ok, Err, unok
 

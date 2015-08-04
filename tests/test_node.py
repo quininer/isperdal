@@ -5,7 +5,8 @@ import asyncio
 from functools import wraps
 
 from isperdal import Microwave as u
-from isperdal.reqres import Request, Response
+from isperdal.request import Request
+from isperdal.response import Response
 from isperdal.utils import unok
 
 env = {
