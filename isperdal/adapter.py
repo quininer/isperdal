@@ -1,11 +1,21 @@
 import asyncio
+
 from aiohttp.wsgi import WSGIServerHttpProtocol
+from aiohttp.websocket import do_handshake
 
 
 class AioWSGIServerProtocol(WSGIServerHttpProtocol):
     @asyncio.coroutine
     def handle_request(self, message, payload):
         if 'websocket' in message.headers.get('UPGRADE', "").lower():
+
+            # websocket handshake
+            status, headers, parser, writer, protocol = do_handshake(
+                message.method,
+                message.headers,
+                self.transport
+            )
+
             pass
         else:
             yield from super().handle_request(message, payload)
