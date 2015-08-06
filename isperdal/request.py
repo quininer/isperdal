@@ -21,7 +21,7 @@ class Request(object):
         self.method = env.get('REQUEST_METHOD', "GET").upper()
         self.uri = env.get('RAW_URI')
         self.path = env.get('PATH_INFO', "/")
-        self.branchs = tobranch(self.path)
+        self.branches = tobranch(self.path)
         self.stream = self.env.get('wsgi.input')
         self.upgrade = 'wsgi.websocket' in env
 
