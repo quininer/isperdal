@@ -120,3 +120,16 @@ def unok(fn):
     False
     """
     return (yield from fn).ok()
+
+
+def tobranch(path):
+    """
+    >>> tobranch("/one")
+    ['/', 'one']
+    >>> tobranch("/two/")
+    ['/', 'two/', '']
+    >>> tobranch("//")
+    ['/', '/', '']
+    """
+    pathsplit = path.split('/')
+    return ["{}/".format(p) for p in pathsplit[:-1]] + pathsplit[-1:]

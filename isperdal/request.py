@@ -3,6 +3,8 @@ from urllib.parse import parse_qs, unquote_plus
 from io import BytesIO
 from asyncio import coroutine
 
+from .utils import tobranch
+
 
 class Request(object):
     """
@@ -19,9 +21,7 @@ class Request(object):
         self.method = env.get('REQUEST_METHOD', "GET").upper()
         self.uri = env.get('RAW_URI')
         self.path = env.get('PATH_INFO', "/")
-        self.next = (
-            lambda path: ["{}/".format(p) for p in path[:-1]]+path[-1:]
-        )(self.path.split('/'))
+        self.branchs = tobranch(self.path)
         self.stream = self.env.get('wsgi.input')
         self.upgrade = 'wsgi.websocket' in env
 

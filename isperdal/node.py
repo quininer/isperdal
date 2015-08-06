@@ -196,13 +196,13 @@ class Microwave(str):
                     else:
                         raise result
 
-            if req.next:
-                nextnode = req.next.pop(0)
+            if req.branchs:
+                nextnode = req.branchs.pop(0)
                 for node in self.subnode:
                     if len(node) >= 3 and node[:2] == ":!":
                         req._rest[
                             node[2:].rstrip('/')
-                        ] = "".join([nextnode]+req.next)
+                        ] = "".join([nextnode]+req.branchs)
                     elif len(node) >= 2 and node[0] == ":":
                         req._rest[
                             node[1:].rstrip('/')
@@ -232,7 +232,7 @@ class Microwave(str):
         req, res = Request(env), Response(start_res)
         return async(unok(
             self.__handler(req, res)
-            if req.next.pop(0) == self else
+            if req.branchs.pop(0) == self else
             self.trigger(
                 req, res, 400, "URL Error"
             )

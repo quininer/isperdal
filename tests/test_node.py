@@ -116,7 +116,7 @@ class TestNode:
     def test_handler(self):
         # '/'
         req, res = Request(env), Response(start_res)
-        assert req.next.pop(0) == '/'
+        assert req.branchs.pop(0) == '/'
 
         result = u('/').all()(
             lambda this, req, res:
@@ -128,7 +128,7 @@ class TestNode:
         # '/posts/q'
         env['PATH_INFO'] = '/posts/1'
         req, res = Request(env), Response(start_res)
-        assert req.next.pop(0) == '/'
+        assert req.branchs.pop(0) == '/'
 
         result = u('/').append(u('posts/'), u(':id'))(
             lambda this, req, res:
@@ -140,7 +140,7 @@ class TestNode:
         # '/file/img/test.png'
         env['PATH_INFO'] = '/file/img/test.png'
         req, res = Request(env), Response(start_res)
-        assert req.next.pop(0) == '/'
+        assert req.branchs.pop(0) == '/'
 
         result = u('/').append(u('file/'), u('img/'), u(':!png'))(
             lambda this, req, res:
@@ -152,7 +152,7 @@ class TestNode:
         # '/error'
         env['PATH_INFO'] = '/error'
         req, res = Request(env), Response(start_res)
-        assert req.next.pop(0) == '/'
+        assert req.branchs.pop(0) == '/'
 
         result = u('/').err(500)(
             lambda this, req, res, err:
