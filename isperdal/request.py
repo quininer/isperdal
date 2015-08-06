@@ -23,6 +23,7 @@ class Request(object):
             lambda path: ["{}/".format(p) for p in path[:-1]]+path[-1:]
         )(self.path.split('/'))
         self.stream = self.env.get('wsgi.input')
+        self.upgrade = 'wsgi.websocket' in env
 
         self._rest = {}
 

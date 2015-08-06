@@ -108,7 +108,7 @@ Status WebSocket
 
 连接即对象的状态友好模式。
 
-    @app.socket(u('websocket'))
+    @app.get(u('websocket'))
     class websocket(WebSocket):
         def on_connect(self):
             if 'id' not in self.req.session:

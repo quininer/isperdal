@@ -3,6 +3,7 @@ from functools import reduce
 
 from .request import Request
 from .response import Response
+from .websocket import WebSocket
 from .adapter import AioHTTPServer
 from .utils import Result, Ok, Err, unok
 
@@ -116,9 +117,6 @@ class Microwave(str):
             return self
         return append_wrap
 
-    def socket(self, *nodes):
-        pass
-
     def get(self, *nodes):
         """
         Add GET method handles to node.
@@ -185,6 +183,12 @@ class Microwave(str):
             if req.method not in self.handles:
                 raise res.status(400).err("Method can't understand.")
             for handle in self.handles[req.method]:
+                if isinstance(handle, WebSocket):
+                    # TODO WebSocket class handle
+                    if self.upgrade:
+                        yield from handle()(self, req, res)
+                    else:
+                        continue
                 result = yield from handle(self, req, res)
                 if isinstance(result, Result):
                     if result.is_ok():
