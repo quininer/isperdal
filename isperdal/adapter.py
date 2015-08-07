@@ -5,20 +5,22 @@ from aiohttp.websocket import do_handshake
 
 
 class AioWSGIServerProtocol(WSGIServerHttpProtocol):
-    @asyncio.coroutine
-    def handle_request(self, message, payload):
-        if 'websocket' in message.headers.get('UPGRADE', "").lower():
+    def create_wsgi_environ(self, message, payload):
+        environ = super().create_wsgi_environ(message, payload)
 
+        if 'websocket' in message.headers.get('UPGRADE', '').lower():
             # websocket handshake
             status, headers, parser, writer, protocol = do_handshake(
-                message.method,
-                message.headers,
-                self.transport
+                message.method, message.headers, self.transport
             )
+            environ['websocket'] = True
+            environ['websocket.status'] = status
+            environ['websocket.headers'] = headers
+            environ['websocket.writer'] = writer
+            environ['websocket.parser'] = parser
+            environ['websocket.version'] = protocol
 
-            pass
-        else:
-            yield from super().handle_request(message, payload)
+        return environ
 
 
 class AioHTTPServer(object):

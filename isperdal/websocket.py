@@ -9,12 +9,12 @@ from aiohttp.websocket import (
 
 
 class WebSocket(object):
-    def __init__(self):
-        pass
+    def __init__(self, req, res):
+        self.req = req
+        self.res = res
 
     @asyncio.coroutine
-    def __call__(self, req, res):
-        self.req, self.res = req, res
+    def __call__(self):
 
         while True:
             try:
@@ -23,6 +23,7 @@ class WebSocket(object):
             except:
                 # client dropped connection
                 break
+
             yield from {
                 MSG_PING: self.on_ping,
                 MSG_TEXT: self.on_message,
@@ -30,19 +31,23 @@ class WebSocket(object):
                 MSG_CLOSE: self.on_close
             }.get(
                 # TODO msg type?
-                msg,
+                int(msg),
                 (lambda: None)
             )()  # TODO argument
 
+    @asyncio.coroutine
     def on_connect(self):
         pass
 
+    @asyncio.coroutine
     def on_ping(self):
         # TODO
         self.writer.pong()
 
+    @asyncio.coroutine
     def on_message(self, message):
         pass
 
+    @asyncio.coroutine
     def on_close(self):
         pass

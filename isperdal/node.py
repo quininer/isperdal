@@ -184,11 +184,13 @@ class Microwave(str):
                 raise res.status(400).err("Method can't understand.")
             for handle in self.handles[req.method]:
                 if isinstance(handle, WebSocket):
+
                     # TODO WebSocket class handle
-                    if self.upgrade:
+                    if req.env.get('websocket'):
                         yield from handle()(self, req, res)
                     else:
                         continue
+
                 result = yield from handle(self, req, res)
                 if isinstance(result, Result):
                     if result.is_ok():
