@@ -8,16 +8,16 @@ class Response(object):
     Response class.
     """
 
-    def __init__(self, start_res):
+    def __init__(self, start_response):
         """
         init Response.
 
-        + start_res<fn>     WSGI start_response
+        + start_response<fn>     WSGI start_response
         """
-        self.start_res = start_res
+        self.start_response = start_response
         self.headers = {}
         self.body = []
-        self.status_code = 200
+        self.status_code = 0
         self.status_text = None
 
     def status(self, code, text=None):
@@ -73,10 +73,13 @@ class Response(object):
 
         - <Ok>
         """
-        self.start_res(
+        self.start_response(
             "{} {}".format(
-                self.status_code,
-                self.status_text or resps.get(self.status_code, "Unknown")
+                self.status_code or 200,
+                self.status_text or resps.get(
+                    self.status_code or 200,
+                    "Unknown"
+                )
             ),
             self.headers.items()
         )

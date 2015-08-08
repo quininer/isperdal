@@ -16,6 +16,7 @@ class AioWSGIServerProtocol(WSGIServerHttpProtocol):
             environ['websocket'] = True
             environ['websocket.status'] = status
             environ['websocket.headers'] = headers
+            environ['websocket.reader'] = self.reader
             environ['websocket.writer'] = writer
             environ['websocket.parser'] = parser
             environ['websocket.version'] = protocol

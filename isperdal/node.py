@@ -183,15 +183,14 @@ class Microwave(str):
             if req.method not in self.handles:
                 raise res.status(400).err("Method can't understand.")
             for handle in self.handles[req.method]:
+
                 if isinstance(handle, WebSocket):
-
-                    # TODO WebSocket class handle
-                    if req.env.get('websocket'):
-                        yield from handle()(self, req, res)
-                    else:
+                    if not req.env.get('websocket'):
                         continue
+                    result = yield from handle(self, req, res)()
+                else:
+                    result = yield from handle(self, req, res)
 
-                result = yield from handle(self, req, res)
                 if isinstance(result, Result):
                     if result.is_ok():
                         return result
@@ -230,8 +229,8 @@ class Microwave(str):
 
         return res.ok()
 
-    def __call__(self, env, start_res):
-        req, res = Request(env), Response(start_res)
+    def __call__(self, env, start_response):
+        req, res = Request(env), Response(start_response)
         return async(unok(
             self.__handler(req, res)
             if req.branches.pop(0) == self else

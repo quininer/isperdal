@@ -27,7 +27,7 @@ def aiotest(fn):
     return aio_wrap
 
 
-def start_res(res_status, headers):
+def start_response(res_status, headers):
     assert isinstance(res_status, str)
     assert isinstance(headers, type({}.items()))
 
@@ -115,7 +115,7 @@ class TestNode:
     @aiotest
     def test_handler(self):
         # '/'
-        req, res = Request(env), Response(start_res)
+        req, res = Request(env), Response(start_response)
         assert req.branches.pop(0) == '/'
 
         result = u('/').all()(
@@ -127,7 +127,7 @@ class TestNode:
 
         # '/posts/q'
         env['PATH_INFO'] = '/posts/1'
-        req, res = Request(env), Response(start_res)
+        req, res = Request(env), Response(start_response)
         assert req.branches.pop(0) == '/'
 
         result = u('/').append(u('posts/'), u(':id'))(
@@ -139,7 +139,7 @@ class TestNode:
 
         # '/file/img/test.png'
         env['PATH_INFO'] = '/file/img/test.png'
-        req, res = Request(env), Response(start_res)
+        req, res = Request(env), Response(start_response)
         assert req.branches.pop(0) == '/'
 
         result = u('/').append(u('file/'), u('img/'), u(':!png'))(
@@ -151,7 +151,7 @@ class TestNode:
 
         # '/error'
         env['PATH_INFO'] = '/error'
-        req, res = Request(env), Response(start_res)
+        req, res = Request(env), Response(start_response)
         assert req.branches.pop(0) == '/'
 
         result = u('/').err(500)(

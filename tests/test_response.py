@@ -39,7 +39,7 @@ def aiotest(fn):
     return aio_wrap
 
 
-def start_res(res_status, headers):
+def start_response(res_status, headers):
     assert isinstance(res_status, str)
     assert int(res_status.split()[0])
     assert isinstance(headers, type({}.items()))
@@ -49,10 +49,10 @@ def start_res(res_status, headers):
 
 class TestRes:
     def setUp(self):
-        self.res = Response(start_res)
+        self.res = Response(start_response)
 
     def test_status(self):
-        assert self.res.status_code == 200
+        assert self.res.status_code == 0
         assert self.res.status(500) is self.res
         assert self.res.status_code == 500
         assert self.res.status_text is None
