@@ -8,7 +8,9 @@ from aiohttp.websocket import (
     MSG_CLOSE
 )
 
-from .utils import Ok, Err
+
+class Close(StopIteration):
+    pass
 
 
 class WebSocket(object):
@@ -16,51 +18,61 @@ class WebSocket(object):
         self.node = node
         self.req = req
         self.res = res
+        self.status = req.env['websocket.status']
+        self.headers = req.env['websocket.headers']
+        self.reader = req.env['websocket.reader']
+        self.writer = req.env['websocket.writer']
+        self.parser = req.env['websocket.parser']
+        self.version = req.env['websocket.version']
 
     def close(self):
-        raise Err('close')
+        raise Close()
 
     @asyncio.coroutine
     def __call__(self):
+        yield from self.on_handshake()
+        yield from self.on_connect()
 
         while True:
             try:
-                # TODO self.wsqueue
                 msg = yield from self.wsqueue.read()
             except:
                 # client dropped connection
                 break
 
             try:
-                yield from partial({
-                    MSG_PING: self.on_ping,
-                    MSG_TEXT: self.on_message,
-                    MSG_BINARY: self.on_message,
-                    MSG_CLOSE: self.on_close
-                }.get(
-                    msg.tp,
-                    asyncio.coroutine(lambda: None)
-                ), *{
-                    MSG_TEXT: [msg.data],
-                    MSG_BINARY: [msg.data]
-                }.get(
-                    msg.tp,
-                    []
-                ))()
+                yield from partial(
+                    {
+                        MSG_PING: self.on_ping,
+                        MSG_TEXT: self.on_message,
+                        MSG_BINARY: self.on_message,
+                        MSG_CLOSE: self.on_close
+                    }.get(
+                        msg.tp,
+                        asyncio.coroutine(lambda: None)
+                    ),
 
-            except Err as err:
-                if err.err() == 'close':
-                    break
+                    *{
+                        MSG_TEXT: [msg.data],
+                        MSG_BINARY: [msg.data]
+                    }.get(
+                        msg.tp,
+                        []
+                    )
+                )()
+
+            except Close:
+                break
 
     @asyncio.coroutine
     def on_handshake(self):
         self.res.start_response(
-            self.res.status_code or self.req.env['websocket.status'],
-            self.res.headers.items() or self.req.env['websocket.headers']
+            self.res.status_code or self.status,
+            self.res.headers.items() or self.headers
         )
 
-        self.wsqueue = self.req.env['websocket.reader'].set_parser(
-            self.req.env['websocket.parser']
+        self.wsqueue = self.reader.set_parser(
+            self.parser
         )
 
     @asyncio.coroutine
@@ -69,7 +81,6 @@ class WebSocket(object):
 
     @asyncio.coroutine
     def on_ping(self):
-        # TODO
         self.writer.pong()
 
     @asyncio.coroutine

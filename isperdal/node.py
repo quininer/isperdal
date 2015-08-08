@@ -1,5 +1,6 @@
 from asyncio import async, coroutine
 from functools import reduce
+from types import FunctionType
 
 from .request import Request
 from .response import Response
@@ -59,7 +60,10 @@ class Microwave(str):
         def add_route(*handles):
             for node in nodes:
                 self.add(node)
-                node.all(methods)(*map(coroutine, handles))
+                node.all(methods)(*map((
+                    lambda h:
+                        coroutine(h) if isinstance(h, FunctionType) else h
+                ), handles))
             return self
         return add_route
 
@@ -74,7 +78,10 @@ class Microwave(str):
         """
         def all_wrap(*handles):
             for method in (methods or self.handles.keys()):
-                self.handles[method.upper()].extend(map(coroutine, handles))
+                self.handles[method.upper()].extend(map((
+                    lambda h:
+                        coroutine(h) if isinstance(h, FunctionType) else h
+                ), handles))
             return self
         return all_wrap
 

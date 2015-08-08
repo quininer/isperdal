@@ -7,6 +7,7 @@ from functools import wraps
 from isperdal import Microwave as u
 from isperdal.request import Request
 from isperdal.response import Response
+from isperdal.websocket import WebSocket
 from isperdal.utils import unok
 
 env = {
@@ -43,6 +44,14 @@ class TestNode:
         assert not self.root.subnode[-1].handles['OPTION']
         assert self.root.subnode[-1].handles['HEAD']
         assert (yield from self.root.subnode.pop().handles['GET'].pop()()) is 1
+
+        self.root.route(index)(WebSocket)
+        assert not self.root.subnode[-1].handles['OPTION']
+        assert self.root.subnode[-1].handles['HEAD']
+        assert issubclass(
+            self.root.subnode.pop().handles['GET'].pop(),
+            WebSocket
+        )
 
         self.root.route(
             index, methods=('OPTION',)
