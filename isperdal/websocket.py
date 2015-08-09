@@ -17,7 +17,6 @@ class Close(StopIteration):
 
 class WebSocket(object):
     def __init__(self, node, req, res):
-        print("WS init")
         self.node = node
         self.req = req
         self.res = res
