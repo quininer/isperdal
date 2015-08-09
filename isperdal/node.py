@@ -4,7 +4,6 @@ from types import FunctionType
 
 from .request import Request
 from .response import Response
-from .websocket import WebSocket
 from .adapter import AioHTTPServer
 from .utils import Result, Ok, Err, unok
 
@@ -190,8 +189,8 @@ class Microwave(str):
             if req.method not in self.handles:
                 raise res.status(400).err("Method can't understand.")
             for handle in self.handles[req.method]:
-
-                if isinstance(handle, WebSocket):
+                if isinstance(handle, type):
+                    # and issubclass(handle, WebSocket):
                     if not req.env.get('websocket'):
                         continue
                     result = yield from handle(self, req, res)()

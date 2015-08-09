@@ -1,4 +1,5 @@
 from asyncio import coroutine
+from http.client import responses
 
 
 class Result(object):
@@ -133,3 +134,23 @@ def tobranch(path):
     """
     pathsplit = path.split('/')
     return ["{}/".format(p) for p in pathsplit[:-1]] + pathsplit[-1:]
+
+
+def resp_status(status_code, status_text=None):
+    """
+    >>> resp_status(200)
+    '200 OK'
+    >>> resp_status(0, None)
+    '200 OK'
+    >>> resp_status(999)
+    '999 Unknown'
+    >>> resp_status(418, "I'm a teapot")
+    "418 I'm a teapot"
+    """
+    return "{} {}".format(
+        status_code or 200,
+        status_text or responses.get(
+            status_code or 200,
+            "Unknown"
+        )
+    )

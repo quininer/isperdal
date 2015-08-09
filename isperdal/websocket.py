@@ -8,6 +8,8 @@ from aiohttp.websocket import (
     MSG_CLOSE
 )
 
+from .utils import resp_status
+
 
 class Close(StopIteration):
     pass
@@ -15,6 +17,7 @@ class Close(StopIteration):
 
 class WebSocket(object):
     def __init__(self, node, req, res):
+        print("WS init")
         self.node = node
         self.req = req
         self.res = res
@@ -67,7 +70,7 @@ class WebSocket(object):
     @asyncio.coroutine
     def on_handshake(self):
         self.res.start_response(
-            self.res.status_code or self.status,
+            resp_status(self.res.status_code or self.status),
             self.res.headers.items() or self.headers
         )
 

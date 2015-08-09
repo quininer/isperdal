@@ -1,6 +1,4 @@
-from http.client import responses as resps
-
-from .utils import Ok, Err
+from .utils import Ok, Err, resp_status
 
 
 class Response(object):
@@ -74,13 +72,7 @@ class Response(object):
         - <Ok>
         """
         self.start_response(
-            "{} {}".format(
-                self.status_code or 200,
-                self.status_text or resps.get(
-                    self.status_code or 200,
-                    "Unknown"
-                )
-            ),
+            resp_status(self.status_code, self.status_text),
             self.headers.items()
         )
         return Ok(self.body if T is None else T)
