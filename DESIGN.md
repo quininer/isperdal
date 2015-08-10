@@ -3,44 +3,44 @@ forbiddenfruit
 
 Normal
 
-    from isperdal import Microwave as u
+	from isperdal import Microwave as u
 
-    # callback
-    u('/').all()(
-        lambda this, req, res:
-            res.push("Hello world.").ok()
-    ).run()
+	# callback
+	u('/').all()(
+	    lambda this, req, res:
+	        res.push("Hello world.").ok()
+	).run()
 
 
-    # decorator
-    app = u('/')
+	# decorator
+	app = u('/')
 
-    @app.all()
-    def foo(this, req, res):
-        return res.push("Hello world.").ok()
+	@app.all()
+	def foo(this, req, res):
+	    return res.push("Hello world.").ok()
 
-    app.run()
+	app.run()
 
 
 Magic
 
-    from isperdal import painting
+	from isperdal import painting
 
-    # callback
-    '/'.all()(
-        lambda this, req, res:
-            res.push("Hello world.").ok()
-    ).run()
+	# callback
+	'/'.all()(
+	    lambda this, req, res:
+	        res.push("Hello world.").ok()
+	).run()
 
 
-    # decorator
-    app = '/'
+	# decorator
+	app = '/'
 
-    @app.all()
-    def foo(this, req, res):
-        return res.push("Hello world.").ok()
+	@app.all()
+	def foo(this, req, res):
+	    return res.push("Hello world.").ok()
 
-    app.run()
+	app.run()
 
 
 Route
@@ -70,9 +70,9 @@ Route
 
 -----
 
-    @app.append(u('posts/'), u(':pid/'), u('comment/'), u(':cid'), methods=('GET',))
-    def postcomment(this, req, res):
-        pass
+	@app.append(u('posts/'), u(':pid/'), u('comment/'), u(':cid'), methods=('GET',))
+	def postcomment(this, req, res):
+	    pass
 
 * 完全不推荐使用无状态的REST
 * 完全不打算支持正则URL
@@ -89,9 +89,9 @@ Route
 
 多参数
 
-        @app.route(u('/'), u('index'), methods=('get', 'post'))
-        def index(this, req, res):
-            pass
+	@app.route(u('/'), u('index'), methods=('get', 'post'))
+	def index(this, req, res):
+	    pass
 
 Middleware
 ----------
@@ -108,18 +108,21 @@ Status WebSocket
 
 连接即对象的状态友好模式。
 
-    @app.get(u('websocket'))
-    class websocket(WebSocket):
-        def on_connect(self):
-            if 'id' not in self.req.session:
-                raise res.err(403)
-            self.transport.send("You are successfully connected")
+	@app.get(u('websocket'))
+	class websocket(WebSocket):
+	    @coroutine
+	    def on_connect(self):
+	        if 'id' not in self.req.session:
+	            raise res.err(403)
+	        self.transport.send("You are successfully connected")
 
-        def on_message(self, message):
-            self.transport.send(message)
+	    @coroutine
+	    def on_message(self, message):
+	        self.transport.send(message)
 
-        def on_close(self, exc=None):
-            print("Connection closed")
+	    @coroutine
+	    def on_close(self, exc=None):
+	        print("Connection closed")
 
 * 参考自 `Vase`
 
@@ -128,17 +131,17 @@ plugins
 
 中间件形式的插件
 
-    from isperdal import Microwave as u
-    from isperdal.middleware import logger, cookie, session, csrftoken
+	from isperdal import Microwave as u
+	from isperdal.middleware import logger, cookie, session, csrftoken
 
-    app = u('/')
+	app = u('/')
 
-    app.all()(logger).all()(cookie).all()(session)
+	app.all()(logger).all()(cookie).all()(session)
 
-    @app.post(u('post').all()(csrftoken))
-    def post(this, req, res):
-        pass
+	@app.post(u('post').all()(csrftoken))
+	def post(this, req, res):
+	    pass
 
-    app.run()
+	app.run()
 
 * 参考自 `expressjs`
