@@ -156,6 +156,7 @@ def resp_status(status_code, status_text=None):
         )
     )
 
+
 def mount(target, method, static=False):
     """
     >>> class Bar:
