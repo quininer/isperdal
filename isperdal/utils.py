@@ -1,5 +1,6 @@
 from asyncio import coroutine
 from http.client import responses
+from types import MethodType
 
 
 class Result(object):
@@ -154,3 +155,32 @@ def resp_status(status_code, status_text=None):
             "Unknown"
         )
     )
+
+def mount(target, method, static=False):
+    """
+    >>> class Bar:
+    ...     def __init__(self, num):
+    ...         self.num = num
+    >>> bar = Bar(1)
+
+    >>> @mount(bar, 'add')
+    ... def add(self, num):
+    ...     self.num += num
+    ...     return num
+    >>> bar.add(2)
+    2
+    >>> @mount(Bar, 'echo', static=True)
+    ... @property
+    ... def echo(self):
+    ...     return self.num
+    >>> bar.echo
+    3
+    """
+    def wrap_mount(fn):
+        setattr(
+            target, method,
+            fn
+            if static else
+            MethodType(fn, target)
+        )
+    return wrap_mount
