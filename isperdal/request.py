@@ -27,8 +27,6 @@ class Request(object):
 
         self._rest = {}
 
-        (self._body, self._query, self._form) = [None, ]*3
-
     @property
     @coroutine
     def body(self):
@@ -39,7 +37,7 @@ class Request(object):
 
         - <BytesIO>
         """
-        if self._body is None:
+        if not hasattr(self, '_body'):
             self._body = BytesIO()
 
         self._body.seek(0, 2)
@@ -62,6 +60,16 @@ class Request(object):
         """
         return unquote_plus(self._rest.get(name, '')) or None
 
+    @property
+    @coroutine
+    def querys(self):
+        if not hasattr(self, '__querys'):
+            self.__querys = parse_qs(
+                self.env.get('QUERY_STRING'),
+                keep_blank_values=True
+            )
+        return self.__querys
+
     @coroutine
     def query(self, name):
         """
@@ -71,13 +79,9 @@ class Request(object):
             2. not support nested parsing.
         ...
         """
-        if self._query is None:
-            self._query = parse_qs(
-                self.env.get('QUERY_STRING'),
-                keep_blank_values=True
-            )
-
-        return (lambda f="", *_: f)(*self._query.get(name, [None]))
+        return (lambda f="", *_: f)(*(
+            yield from self.querys
+        ).get(name, [None]))
 
     @coroutine
     def header(self, name):
@@ -96,15 +100,10 @@ class Request(object):
             self.env.get(name)
         )
 
+    @property
     @coroutine
-    def form(self, name):
-        """
-        Request form param.
-            &asyncio
-            1. always returns the first argument.
-        ...
-        """
-        if self._form is None:
+    def forms(self):
+        if not hasattr(self, '__forms'):
             safe_env = {'QUERY_STRING': ""}
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
                 if key in self.env:
@@ -114,9 +113,18 @@ class Request(object):
                 environ=safe_env,
                 keep_blank_values=True
             )
-            self._form = fs
+            self.__forms = fs
+        return self.__forms
 
-        return self._form.getfirst(name)
+    @coroutine
+    def form(self, name):
+        """
+        Request form param.
+            &asyncio
+            1. always returns the first argument.
+        ...
+        """
+        return (yield from self.forms).getfirst(name)
 
     @coroutine
     def parms(self, name):

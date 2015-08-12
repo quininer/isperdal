@@ -82,7 +82,7 @@ class TestReq:
         assert (yield from req.header('Remote-Addr')) == '127.0.0.1'
 
     @aiotest
-    def test_from(self):
+    def test_form(self):
         req = Request(env)
         assert (yield from req.form('foo')) is None
 

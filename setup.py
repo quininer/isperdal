@@ -4,6 +4,9 @@
 from distutils.core import setup
 from os import path
 
+import isperdal
+isperdal
+
 setup(
     name='isperdal',
     version='0.1',
@@ -16,6 +19,6 @@ setup(
         path.split(path.abspath(__file__))[0],
         'README.md'
     )).read(),
-    packages=['isperdal'],
+    packages=['isperdal', 'isperdal/middleware'],
     requires=['aiohttp']
 )
