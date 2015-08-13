@@ -15,8 +15,17 @@ class Response(object):
         self.start_response = start_response
         self.headers = {}
         self.body = []
+        self.hook = []
         self.status_code = 0
         self.status_text = None
+
+    def response(self):
+        for fn in self.hook:
+            fn(self)
+        self.start_response(
+            resp_status(self.status_code, self.status_text),
+            self.headers.items()
+        )
 
     def status(self, code, text=None):
         """
@@ -31,7 +40,7 @@ class Response(object):
         self.status_text = text
         return self
 
-    def header(self, name, value):
+    def header(self, name, value=""):
         """
         Set header.
 
@@ -71,10 +80,7 @@ class Response(object):
 
         - <Ok>
         """
-        self.start_response(
-            resp_status(self.status_code, self.status_text),
-            self.headers.items()
-        )
+        self.response()
         return Ok(self.body if T is None else T)
 
     def err(self, E):
