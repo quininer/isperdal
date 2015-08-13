@@ -42,16 +42,16 @@ class TestReq:
     @aiotest
     def test_body(self):
         req = Request(env)
-        assert (yield from req.body).tell() is 0
-        assert isinstance((yield from req.body).read(), bytes)
+        assert (yield from req.body()).tell() is 0
+        assert isinstance((yield from req.body()).read(), bytes)
 
         req = Request(dict(env, **{
             'wsgi.input': fakeStreamIO(b"bar=baz")
         }))
-        assert (yield from req.body).tell() is 0
-        assert (yield from req.body).read() == b'bar=baz'
+        assert (yield from req.body()).tell() is 0
+        assert (yield from req.body()).read() == b'bar=baz'
         assert (yield from req.env['wsgi.input'].read()) == b''
-        assert (yield from req.body).tell() is 0
+        assert (yield from req.body()).tell() is 0
 
     @aiotest
     def test_rest(self):

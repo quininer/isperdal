@@ -1,7 +1,6 @@
 from asyncio import coroutine
 from http.cookies import SimpleCookie
 
-from isperdal.request import Request
 from isperdal.utils import mount
 
 
@@ -16,8 +15,7 @@ def cookie(this, req, res):
     >>> u("/").all()(cookie)
     '/'
     """
-    @mount(Request, 'cookies', static=True)
-    @property
+    @mount(req, 'cookies')
     @coroutine
     def method_cookies(self):
         if not hasattr(self, '__cookies'):
@@ -28,5 +26,5 @@ def cookie(this, req, res):
     @coroutine
     def method_cookie(self, key):
         return (lambda v: v if v is None else v.value)((
-            yield from self.cookies
+            yield from self.cookies()
         ).get(key))
