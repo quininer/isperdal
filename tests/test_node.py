@@ -23,8 +23,6 @@ def aiotest(fn):
         loop.run_until_complete(
             asyncio.coroutine(fn)(*args, **kwargs)
         )
-        # loop.run_forever()
-        # loop.stop()
     return aio_wrap
 
 

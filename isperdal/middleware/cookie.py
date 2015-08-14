@@ -7,16 +7,28 @@ from isperdal.utils import mount
 def cookie(this, req, res):
     """
     >>> from isperdal.request import Request
+    >>> from isperdal.response import Response
     >>> from isperdal import Microwave as u
+
+    >>> from asyncio import coroutine, get_event_loop
+    >>> loop = get_event_loop()
+
     >>> env = {}
     >>> env['HTTP_COOKIE'] = "bar=baz"
-    >>> app = u('/')
-    >>> app.all()(cookie)
-    '/'
-    >>> @app.all()
-    ... def foo(this, req, res):
-    ...     value = yield from req.cookie('bar')
-    ...     return res.ok(value)
+    >>> req, res = Request(env), Response(lambda *_: None)
+
+    >>> cookie(None, req, res)
+
+    >>> loop.run_until_complete(req.cookies())
+    <SimpleCookie: bar='baz'>
+    >>> loop.run_until_complete(req.cookie('bar'))
+    'baz'
+
+    >>> res.cookie('foo', 'bar').cookies
+    <SimpleCookie: foo='bar'>
+    >>> res.hook[-1](res)
+    >>> res.headers['Set-Cookie']
+    'foo=bar'
     """
     @mount(req, 'cookies')
     @coroutine
