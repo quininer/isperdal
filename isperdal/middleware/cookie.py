@@ -6,14 +6,17 @@ from isperdal.utils import mount
 
 def cookie(this, req, res):
     """
-    TODO
-
     >>> from isperdal.request import Request
     >>> from isperdal import Microwave as u
     >>> env = {}
-    >>> env['HTTP_COOKIE'] = ""
-    >>> u("/").all()(cookie)
+    >>> env['HTTP_COOKIE'] = "bar=baz"
+    >>> app = u('/')
+    >>> app.all()(cookie)
     '/'
+    >>> @app.all()
+    ... def foo(this, req, res):
+    ...     value = yield from req.cookie('bar')
+    ...     return res.ok(value)
     """
     @mount(req, 'cookies')
     @coroutine

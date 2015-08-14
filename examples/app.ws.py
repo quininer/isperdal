@@ -12,6 +12,6 @@ app = u('/')
 class Ws(WebSocket):
     @asyncio.coroutine
     def on_message(self, message):
-        self.writer.send(message)
+        self.send(message)
 
 app.run()

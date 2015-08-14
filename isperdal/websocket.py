@@ -1,4 +1,4 @@
-import asyncio
+from asyncio import coroutine
 from functools import partial
 
 from aiohttp.websocket import (
@@ -27,10 +27,16 @@ class WebSocket(object):
         self.parser = req.env['websocket.parser']
         self.version = req.env['websocket.version']
 
+    def send(self, data):
+        self.writer.send(data)
+
+    def pong(self):
+        self.writer.pong()
+
     def close(self):
         raise Close()
 
-    @asyncio.coroutine
+    @coroutine
     def __call__(self):
         yield from self.on_handshake()
         yield from self.on_connect()
@@ -51,23 +57,22 @@ class WebSocket(object):
                         MSG_CLOSE: self.on_close
                     }.get(
                         msg.tp,
-                        asyncio.coroutine(lambda: None)
+                        coroutine(lambda: None)
                     ),
 
                     *{
                         MSG_TEXT: [msg.data],
                         MSG_BINARY: [msg.data]
-                    }.get(
-                        msg.tp,
-                        []
-                    )
+                    }.get(msg.tp, [])
                 )()
 
             except Close:
                 break
 
-    @asyncio.coroutine
+    @coroutine
     def on_handshake(self):
+        for fn in self.res.hook:
+            fn(self.res)
         self.res.start_response(
             resp_status(self.res.status_code or self.status),
             self.res.headers.items() or self.headers
@@ -77,18 +82,18 @@ class WebSocket(object):
             self.parser
         )
 
-    @asyncio.coroutine
+    @coroutine
     def on_connect(self):
         pass
 
-    @asyncio.coroutine
+    @coroutine
     def on_ping(self):
-        self.writer.pong()
+        self.pong()
 
-    @asyncio.coroutine
+    @coroutine
     def on_message(self, message):
         pass
 
-    @asyncio.coroutine
+    @coroutine
     def on_close(self):
         pass

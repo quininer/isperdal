@@ -23,7 +23,6 @@ class Request(object):
         self.path = env.get('PATH_INFO', "/")
         self.branches = tobranch(self.path)
         self.stream = self.env.get('wsgi.input')
-        self.upgrade = 'wsgi.websocket' in env
 
         self._rest = {}
 
