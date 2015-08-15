@@ -19,7 +19,7 @@ class AioWSGIServerProtocol(WSGIServerHttpProtocol):
             environ['websocket.reader'] = self.reader
             environ['websocket.writer'] = writer
             environ['websocket.parser'] = parser
-            environ['websocket.version'] = protocol
+            environ['websocket.protocol'] = protocol
 
         return environ
 

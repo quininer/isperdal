@@ -25,7 +25,7 @@ class WebSocket(object):
         self.reader = req.env['websocket.reader']
         self.writer = req.env['websocket.writer']
         self.parser = req.env['websocket.parser']
-        self.version = req.env['websocket.version']
+        self.protocol = req.env['websocket.protocol']
 
     def send(self, data):
         self.writer.send(data)
@@ -43,7 +43,7 @@ class WebSocket(object):
 
         while True:
             try:
-                msg = yield from self.wsqueue.read()
+                message = yield from self.wsqueue.read()
             except:
                 # client dropped connection
                 break
@@ -56,14 +56,14 @@ class WebSocket(object):
                         MSG_BINARY: self.on_message,
                         MSG_CLOSE: self.on_close
                     }.get(
-                        msg.tp,
+                        message.tp,
                         coroutine(lambda: None)
                     ),
 
                     *{
-                        MSG_TEXT: [msg.data],
-                        MSG_BINARY: [msg.data]
-                    }.get(msg.tp, [])
+                        MSG_TEXT: [message.data],
+                        MSG_BINARY: [message.data]
+                    }.get(message.tp, [])
                 )()
 
             except Close:
@@ -78,9 +78,7 @@ class WebSocket(object):
             self.res.headers.items() or self.headers
         )
 
-        self.wsqueue = self.reader.set_parser(
-            self.parser
-        )
+        self.wsqueue = self.reader.set_parser(self.parser)
 
     @coroutine
     def on_connect(self):
@@ -96,4 +94,4 @@ class WebSocket(object):
 
     @coroutine
     def on_close(self):
-        pass
+        self.close()
