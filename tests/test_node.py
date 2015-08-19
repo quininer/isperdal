@@ -128,7 +128,7 @@ class TestNode:
         result = u('/').all()(
             lambda this, req, res:
                 res.push("Test.").ok()
-        )._Microwave__handler(req, res)
+        ).handler(req, res)
 
         assert (yield from unok(result)) == [b'Test.']
 
@@ -140,7 +140,7 @@ class TestNode:
         result = u('/').append(u('posts/'), u(':id'))(
             lambda this, req, res:
                 res.push((yield from req.rest('id')))
-        )._Microwave__handler(req, res)
+        ).handler(req, res)
 
         assert (yield from unok(result)) == [b'1']
 
@@ -152,7 +152,7 @@ class TestNode:
         result = u('/').append(u('file/'), u('img/'), u(':!png'))(
             lambda this, req, res:
                 res.push((yield from req.rest('png'))).ok()
-        )._Microwave__handler(req, res)
+        ).handler(req, res)
 
         assert (yield from unok(result)) == [b'test.png']
 
@@ -167,6 +167,6 @@ class TestNode:
         ).all()(
             lambda this, req, res:
                 res.status(500).err("Test")
-        )._Microwave__handler(req, res)
+        ).handler(req, res)
 
         assert (yield from unok(result)) == [b'Test']

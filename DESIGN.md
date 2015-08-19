@@ -1,8 +1,6 @@
 forbiddenfruit
 --------------
 
-Normal
-
 	from isperdal import Microwave as u
 
 	# callback
@@ -14,27 +12,6 @@ Normal
 
 	# decorator
 	app = u('/')
-
-	@app.all()
-	def foo(this, req, res):
-	    return res.push("Hello world.").ok()
-
-	app.run()
-
-
-Magic
-
-	from isperdal import painting
-
-	# callback
-	'/'.all()(
-	    lambda this, req, res:
-	        res.push("Hello world.").ok()
-	).run()
-
-
-	# decorator
-	app = '/'
 
 	@app.all()
 	def foo(this, req, res):

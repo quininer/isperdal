@@ -187,7 +187,7 @@ class Microwave(str):
         return result if isinstance(result, Ok) else res.ok()
 
     @coroutine
-    def __handler(self, req, res):
+    def handler(self, req, res):
         """
         Request handle.
         """
@@ -222,7 +222,7 @@ class Microwave(str):
                         ] = nextnode.rstrip('/')
                     elif nextnode != node:
                         continue
-                    result = yield from node.__handler(req, res)
+                    result = yield from node.handler(req, res)
                     if isinstance(result, Ok):
                         return result
 
@@ -244,7 +244,7 @@ class Microwave(str):
     def __call__(self, env, start_response):
         req, res = Request(env), Response(start_response)
         return async(unok(
-            self.__handler(req, res)
+            self.handler(req, res)
             if req.branches.pop(0) == self else
             self.trigger(
                 req, res, 400, "URL Error"
@@ -252,4 +252,4 @@ class Microwave(str):
         ))
 
     def run(self, host="127.0.0.1", port=8000, debug=True, ssl=False):
-        AioHTTPServer(host, port, debug, ssl).run(self)
+        AioHTTPServer(host, port, debug, ssl).run(self.__call__)
