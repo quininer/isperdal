@@ -1,5 +1,5 @@
-forbiddenfruit
---------------
+Example
+-------
 
 	from isperdal import Microwave as u
 
