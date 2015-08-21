@@ -251,5 +251,5 @@ class Microwave(str):
             )
         ))
 
-    def run(self, host="127.0.0.1", port=8000, debug=True, ssl=False):
+    def run(self, host="127.0.0.1", port=8000, debug=True, ssl=()):
         AioHTTPServer(host, port, debug, ssl).run(self.__call__)

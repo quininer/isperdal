@@ -1,4 +1,5 @@
-import asyncio
+from asyncio import get_event_loop
+from ssl import SSLContext, PROTOCOL_TLSv1_2
 
 from aiohttp.wsgi import WSGIServerHttpProtocol
 from aiohttp.websocket import do_handshake
@@ -29,11 +30,14 @@ class AioHTTPServer(object):
         self.host = host
         self.port = port
         self.debug = debug
-        self.ssl = ssl
+        if ssl:
+            self.ssl = SSLContext(PROTOCOL_TLSv1_2)
+            self.ssl.load_cert_chain(*ssl)
+        else:
+            self.ssl = None
 
     def run(self, handler):
-
-        loop = asyncio.get_event_loop()
+        loop = get_event_loop()
 
         loop.run_until_complete(
             loop.create_server(
@@ -41,10 +45,11 @@ class AioHTTPServer(object):
                     handler,
                     readpayload=False,
                     debug=self.debug,
-                    is_ssl=self.ssl
+                    is_ssl=bool(self.ssl)
                 ),
                 self.host,
-                self.port
+                self.port,
+                ssl=self.ssl
             )
         )
 
