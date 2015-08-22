@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from asyncio import coroutine, get_event_loop
-from functools import wraps
+from asyncio import coroutine
 
 from aiohttp.websocket import (
     MSG_PING,
@@ -11,17 +10,8 @@ from aiohttp.websocket import (
     MSG_CLOSE
 )
 
+from isperdal.utils import aiotest
 from isperdal.websocket import WebSocket
-
-
-def aiotest(fn):
-    @wraps(fn)
-    def aio_wrap(*args, **kwargs):
-        loop = get_event_loop()
-        loop.run_until_complete(
-            coroutine(fn)(*args, **kwargs)
-        )
-    return aio_wrap
 
 
 class fakeWriter:

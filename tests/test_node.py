@@ -1,29 +1,16 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import asyncio
-from functools import wraps
-
 from isperdal import Microwave as u
 from isperdal.request import Request
 from isperdal.response import Response
 from isperdal.websocket import WebSocket
-from isperdal.utils import unok
+from isperdal.utils import unok, aiotest
 
 env = {
     'REQUEST_METHOD': "GET",
     'PATH_INFO': "/"
 }
-
-
-def aiotest(fn):
-    @wraps(fn)
-    def aio_wrap(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            asyncio.coroutine(fn)(*args, **kwargs)
-        )
-    return aio_wrap
 
 
 def start_response(res_status, headers):

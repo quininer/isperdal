@@ -26,6 +26,7 @@ class Request(object):
 
         self._rest = {}
 
+    @property
     @coroutine
     def body(self):
         """
@@ -58,6 +59,7 @@ class Request(object):
         """
         return unquote_plus(self._rest.get(name, '')) or None
 
+    @property
     @coroutine
     def querys(self):
         if not hasattr(self, '__querys'):
@@ -77,7 +79,7 @@ class Request(object):
         ...
         """
         return (lambda f="", *_: f)(*(
-            yield from self.querys()
+            yield from self.querys
         ).get(name, [None]))
 
     @coroutine
@@ -97,6 +99,7 @@ class Request(object):
             self.env.get(name)
         )
 
+    @property
     @coroutine
     def forms(self):
         if not hasattr(self, '__forms'):
@@ -105,7 +108,7 @@ class Request(object):
                 if key in self.env:
                     safe_env[key] = self.env[key]
             fs = FieldStorage(
-                fp=(yield from self.body()),
+                fp=(yield from self.body),
                 environ=safe_env,
                 keep_blank_values=True
             )
@@ -120,10 +123,10 @@ class Request(object):
             1. always returns the first argument.
         ...
         """
-        return (yield from self.forms()).getfirst(name)
+        return (yield from self.forms).getfirst(name)
 
     @coroutine
-    def parms(self, name):
+    def parm(self, name):
         """
         Request all param.
             &asyncio

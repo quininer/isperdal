@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 from io import BytesIO
-from functools import wraps
 import asyncio
 
 from isperdal.response import Response
@@ -27,16 +26,6 @@ env = {
     'HTTP_USER_AGENT': "Mozilla",
     'REMOTE_ADDR': "127.0.0.1"
 }
-
-
-def aiotest(fn):
-    @wraps(fn)
-    def aio_wrap(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            asyncio.coroutine(fn)(*args, **kwargs)
-        )
-    return aio_wrap
 
 
 def start_response(res_status, headers):

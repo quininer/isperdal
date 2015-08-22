@@ -2,9 +2,9 @@
 # encoding: utf-8
 
 from io import BytesIO
-from functools import wraps
 import asyncio
 
+from isperdal.utils import aiotest
 from isperdal.request import Request
 
 
@@ -28,30 +28,20 @@ env = {
 }
 
 
-def aiotest(fn):
-    @wraps(fn)
-    def aio_wrap(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            asyncio.coroutine(fn)(*args, **kwargs)
-        )
-    return aio_wrap
-
-
 class TestReq:
     @aiotest
     def test_body(self):
         req = Request(env)
-        assert (yield from req.body()).tell() is 0
-        assert isinstance((yield from req.body()).read(), bytes)
+        assert (yield from req.body).tell() is 0
+        assert isinstance((yield from req.body).read(), bytes)
 
         req = Request(dict(env, **{
             'wsgi.input': fakeStreamIO(b"bar=baz")
         }))
-        assert (yield from req.body()).tell() is 0
-        assert (yield from req.body()).read() == b'bar=baz'
+        assert (yield from req.body).tell() is 0
+        assert (yield from req.body).read() == b'bar=baz'
         assert (yield from req.env['wsgi.input'].read()) == b''
-        assert (yield from req.body()).tell() is 0
+        assert (yield from req.body).tell() is 0
 
     @aiotest
     def test_rest(self):
@@ -67,13 +57,13 @@ class TestReq:
     @aiotest
     def test_querys(self):
         req = Request(env)
-        assert dict((yield from req.querys())) == {}
+        assert dict((yield from req.querys)) == {}
 
         req = Request(dict(env, **{
             'QUERY_STRING': "foo=one&foo=two&foo[foo]=three"
         }))
-        assert (yield from req.querys()).get('foo') == ['one', 'two']
-        assert (yield from req.querys()).get('foo[foo]') == ['three']
+        assert (yield from req.querys).get('foo') == ['one', 'two']
+        assert (yield from req.querys).get('foo[foo]') == ['three']
 
     @aiotest
     def test_query(self):
@@ -95,7 +85,7 @@ class TestReq:
     @aiotest
     def test_forms(self):
         req = Request(env)
-        assert dict((yield from req.forms())) == {}
+        assert dict((yield from req.forms)) == {}
 
         req = Request(dict(env, **{
             'REQUEST_METHOD': "POST",
@@ -103,8 +93,8 @@ class TestReq:
             'CONTENT_LENGTH': "30",
             'wsgi.input': fakeStreamIO(b"foo=one&foo=two&foo[foo]=three")
         }))
-        assert (yield from req.forms()).getvalue('foo') == ['one', 'two']
-        assert (yield from req.forms()).getvalue('foo[foo]') == 'three'
+        assert (yield from req.forms).getvalue('foo') == ['one', 'two']
+        assert (yield from req.forms).getvalue('foo[foo]') == 'three'
 
         req = Request(dict(env, **{
             'REQUEST_METHOD': "POST",
@@ -125,8 +115,8 @@ class TestReq:
                 b'------WebKitFormBoundaryhvj9Daa5OwrBBWG9--\r\n'
             )
         }))
-        assert (yield from req.forms()).getvalue('bar') == 'baz'
-        assert (yield from req.forms()).getvalue('foo') == b'Hi\n'
+        assert (yield from req.forms).getvalue('bar') == 'baz'
+        assert (yield from req.forms).getvalue('foo') == b'Hi\n'
 
     @aiotest
     def test_form(self):

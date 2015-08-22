@@ -1,6 +1,7 @@
-from asyncio import coroutine
+from asyncio import coroutine, get_event_loop
 from http.client import responses
 from types import MethodType
+from functools import wraps
 
 
 class Result(object):
@@ -185,3 +186,13 @@ def mount(target, method, static=False):
             MethodType(fn, target)
         )
     return wrap_mount
+
+
+def aiotest(fn):
+    @wraps(fn)
+    def aio_wrap(*args, **kwargs):
+        loop = get_event_loop()
+        loop.run_until_complete(
+            coroutine(fn)(*args, **kwargs)
+        )
+    return aio_wrap

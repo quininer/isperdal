@@ -61,10 +61,12 @@ class Microwave(str):
                 self.add(node)
                 node.all(methods)(*map((
                     lambda h:
-                        coroutine(h) if (
+                        coroutine(h)
+                        if (
                             isinstance(h, FunctionType) and
                             not iscoroutinefunction(h)
-                        ) else h
+                        ) else
+                        h
                 ), handles))
             return self
         return add_route
@@ -82,10 +84,12 @@ class Microwave(str):
             for method in (methods or self.handles.keys()):
                 self.handles[method.upper()].extend(map((
                     lambda h:
-                        coroutine(h) if (
+                        coroutine(h)
+                        if (
                             isinstance(h, FunctionType) and
                             not iscoroutinefunction(h)
-                        ) else h
+                        ) else
+                        h
                 ), handles))
             return self
         return all_wrap
