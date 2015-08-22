@@ -8,6 +8,7 @@ from isperdal.websocket import WebSocket
 
 app = u('/')
 
+
 @app.all()
 class Ws(WebSocket):
     @asyncio.coroutine

@@ -38,6 +38,10 @@ class Microwave(str):
             lambda this, req, res, err:
                 res.push("{} {}".format(res.status_code, err))
         )
+        self.codes[302] = coroutine(
+            lambda this, req, res, err:
+                res.header("Location", err)
+        )
 
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
