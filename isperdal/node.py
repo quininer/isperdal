@@ -23,15 +23,17 @@ class Microwave(str):
         """
         self.subnode = []
         self.handles = {
-            'OPTION': [],
-            'GET': [],
-            'HEAD': [],
-            'POST': [],
-            'PUT': [],
-            'DELETE': [],
-            'TRACE': [],
-            'CONNECT': [],
-            'PATCH': []
+            m: [] for m in (
+                'OPTION',
+                'GET',
+                'HEAD',
+                'POST',
+                'PUT',
+                'DELETE',
+                'TRACE',
+                'CONNECT',
+                'PATCH'
+            )
         }
         self.codes = {}
         self.codes[400] = self.codes[404] = coroutine(
