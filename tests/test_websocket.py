@@ -67,8 +67,7 @@ class fakeRes:
 class WS(WebSocket):
     @coroutine
     def on_handshake(self):
-        result = yield from super().on_handshake()
-        assert result is None
+        yield from super().on_handshake()
 
     @coroutine
     def on_connect(self):
@@ -76,8 +75,7 @@ class WS(WebSocket):
 
     @coroutine
     def on_ping(self):
-        result = self.pong()
-        assert result is None
+        self.pong()
 
     @coroutine
     def on_message(self, message):
@@ -86,8 +84,7 @@ class WS(WebSocket):
 
     @coroutine
     def on_close(self):
-        result = self.close()
-        assert result is True
+        self.close()
 
 
 class TestWs:

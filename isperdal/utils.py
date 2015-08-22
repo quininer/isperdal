@@ -189,10 +189,25 @@ def mount(target, method, static=False):
 
 
 def aiotest(fn):
+    """
+    >>> @aiotest
+    ... def foo(bar):
+    ...     assert bar == "BAR"
+    >>> foo("BAR")
+
+    >>> @aiotest
+    ... def foo2(baz):
+    ...     return (yield from baz())
+    >>> @coroutine
+    ... def baz():
+    ...     return "BAZ"
+    >>> foo2(baz)
+    'BAZ'
+    """
     @wraps(fn)
     def aio_wrap(*args, **kwargs):
         loop = get_event_loop()
-        loop.run_until_complete(
+        return loop.run_until_complete(
             coroutine(fn)(*args, **kwargs)
         )
     return aio_wrap
