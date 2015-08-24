@@ -9,7 +9,7 @@ isperdal
 
 setup(
     name='isperdal',
-    version='0.1',
+    version='1.1',
     description='a web framework.',
     author='quininer kel',
     author_email='quininer@live.com',

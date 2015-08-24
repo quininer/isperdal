@@ -70,16 +70,6 @@ Route
 	def index(this, req, res):
 	    pass
 
-Middleware
-----------
-
-基于节点路由的中间件，
-非 wsgi 中间件，
-本质上不区分 Middleware 与 APP。
-
-* [callback](/examples/app.callback.py#L9)
-* [decorator](/examples/app.decorator.py#L17)
-
 Status WebSocket
 ----------------
 
