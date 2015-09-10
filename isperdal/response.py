@@ -56,11 +56,9 @@ class Response(object):
         if isinstance(body, str):
             body = body.encode()
 
-        bodysplit = (
+        self.body.extend((
             lambda b: [b[r:r+8192] for r in range(0, len(b), 8192)]
-        )(body)
-
-        self.body.extend(bodysplit)
+        )(body))
         return self
 
     def ok(self, T=None):

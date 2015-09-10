@@ -65,15 +65,7 @@ class Microwave(str):
         def add_route(*handles):
             for node in nodes:
                 self.add(node)
-                node.all(methods)(*map((
-                    lambda h:
-                        coroutine(h)
-                        if (
-                            isinstance(h, FunctionType) and
-                            not iscoroutinefunction(h)
-                        ) else
-                        h
-                ), handles))
+                node.all(methods)(*handles)
             return self
         return add_route
 
@@ -89,13 +81,13 @@ class Microwave(str):
         def all_wrap(*handles):
             for method in (methods or self.handles.keys()):
                 self.handles[method.upper()].extend(map((
-                    lambda h:
-                        coroutine(h)
+                    lambda handle:
+                        coroutine(handle)
                         if (
-                            isinstance(h, FunctionType) and
-                            not iscoroutinefunction(h)
+                            isinstance(handle, FunctionType) and
+                            not iscoroutinefunction(handle)
                         ) else
-                        h
+                        handle
                 ), handles))
             return self
         return all_wrap
@@ -236,7 +228,7 @@ class Microwave(str):
                     if isinstance(result, Ok):
                         return result
 
-            if not res.body:
+            if not (res.status_code or res.body):
                 raise res.status(404).err("Not Found")
 
         except Err as err:
