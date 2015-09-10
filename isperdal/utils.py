@@ -94,7 +94,12 @@ class Result(object):
 
 
 class Ok(Result):
-    pass
+    """
+    >>> bool(Ok(False))
+    True
+    """
+    def __bool__(self):
+        return True
 
 
 class Err(Result, Exception):
@@ -104,8 +109,11 @@ class Err(Result, Exception):
     ... except Err as e:
     ...     e
     Err<'err'>
+    >>> bool(Err(True))
+    False
     """
-    pass
+    def __bool__(self):
+        return False
 
 
 @coroutine
@@ -207,7 +215,5 @@ def aiotest(fn):
     @wraps(fn)
     def aio_wrap(*args, **kwargs):
         loop = get_event_loop()
-        return loop.run_until_complete(
-            coroutine(fn)(*args, **kwargs)
-        )
+        return loop.run_until_complete(coroutine(fn)(*args, **kwargs))
     return aio_wrap

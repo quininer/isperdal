@@ -248,9 +248,7 @@ class Microwave(str):
         return async(unok(
             self.handler(req, res)
             if req.branches.pop(0) == self else
-            self.trigger(
-                req, res, 400, "URL Error"
-            )
+            self.trigger(req, res, 400, "URL Error")
         ))
 
     def run(self, host="127.0.0.1", port=8000, debug=True, ssl=()):
