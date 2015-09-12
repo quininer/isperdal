@@ -68,20 +68,20 @@ class Result(object):
     def map(self, fn):
         """
         >>> Ok(1).map(lambda i: i+1)
-        2
+        Ok<2>
         >>> Err(1).map(lambda i: i+1)
-        2
+        Err<1>
         """
-        return fn(self.unwrap())
+        return Ok(fn(self.unwrap())) if self.is_ok() else self
 
     def map_err(self, fn):
         """
-        >>> Ok(1).map_err(lambda i: Err(i+1))
+        >>> Ok(1).map_err(lambda i: i+1)
         Ok<1>
-        >>> Err(1).map_err(lambda i: Err(i+1))
+        >>> Err(1).map_err(lambda i: i+1)
         Err<2>
         """
-        return fn(self.unwrap()) if self.is_err() else self
+        return Err(fn(self.unwrap())) if self.is_err() else self
 
     def and_then(self, fn):
         """
