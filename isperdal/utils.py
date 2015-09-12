@@ -55,7 +55,7 @@ class Result(object):
         1
         >>> Err(1).ok()
         """
-        return self.unwrap() if self.is_ok() else None
+        return self.target if self.is_ok() else None
 
     def err(self):
         """
@@ -63,7 +63,7 @@ class Result(object):
         1
         >>> Ok(1).err()
         """
-        return self.unwrap() if self.is_err() else None
+        return self.target if self.is_err() else None
 
     def map(self, fn):
         """
@@ -72,7 +72,7 @@ class Result(object):
         >>> Err(1).map(lambda i: i+1)
         Err<1>
         """
-        return Ok(fn(self.unwrap())) if self.is_ok() else self
+        return Ok(fn(self.target)) if self.is_ok() else self
 
     def map_err(self, fn):
         """
@@ -81,16 +81,7 @@ class Result(object):
         >>> Err(1).map_err(lambda i: i+1)
         Err<2>
         """
-        return Err(fn(self.unwrap())) if self.is_err() else self
-
-    def and_then(self, fn):
-        """
-        >>> Ok(1).and_then(lambda i: Ok(i+1))
-        Ok<2>
-        >>> Err(1).and_then(lambda i: Ok(i+1))
-        Err<1>
-        """
-        return fn(self.unwrap()) if self.is_ok() else self
+        return Err(fn(self.target)) if self.is_err() else self
 
 
 class Ok(Result):
