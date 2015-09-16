@@ -16,6 +16,8 @@ class Microwave(str):
 
     """
 
+    debug = True
+
     def __init__(self, *args, **kwargs):
         """
         init node.
