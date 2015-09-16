@@ -12,11 +12,11 @@ from .utils import Result, Ok, Err, unok
 codes = {
     400: coroutine(
         lambda this, req, res, err:
-            res.push("{} {}".format(res.status_code, err)).ok()
+            res.push("400 {}".format(err)).ok()
     ),
     404: coroutine(
         lambda this, req, res, err:
-            res.push("{} {}".format(res.status_code, err)).ok()
+            res.push("404 {}".format(err)).ok()
     ),
     302: coroutine(
         lambda this, req, res, err:
@@ -24,9 +24,7 @@ codes = {
     ),
     500: coroutine(
         lambda this, req, res, err:
-            res.push(
-                err if this.debug else "Unknown Error"
-            ).ok()
+            res.push(err if this.debug else "500 Unknown Error").ok()
     )
 }
 
@@ -202,11 +200,9 @@ class Microwave(str):
         - Result object.
         """
         res.status(code)
-        if code in self.codes:
-            result = yield from self.codes[code](self, req, res, message)
-        else:
-            result = yield from codes[code](self, req, res, message)
-
+        result = yield from (
+            self.codes if code in self.codes else codes
+        )[code](self, req, res, message)
         return result if isinstance(result, Ok) else res.ok()
 
     @coroutine
