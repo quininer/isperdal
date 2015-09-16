@@ -11,7 +11,7 @@ from aiohttp.websocket import (
 from .utils import resp_status
 
 
-class Close(StopIteration):
+class Close(Exception):
     pass
 
 
