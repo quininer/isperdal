@@ -9,6 +9,28 @@ from .adapter import AioHTTPServer
 from .utils import Result, Ok, Err, unok
 
 
+codes = {
+    400: coroutine(
+        lambda this, req, res, err:
+            res.push("{} {}".format(res.status_code, err)).ok()
+    ),
+    404: coroutine(
+        lambda this, req, res, err:
+            res.push("{} {}".format(res.status_code, err)).ok()
+    ),
+    302: coroutine(
+        lambda this, req, res, err:
+            res.header("Location", err).ok()
+    ),
+    500: coroutine(
+        lambda this, req, res, err:
+            res.push(
+                err if this.debug else "Unknown Error"
+            ).ok()
+    )
+}
+
+
 class Microwave(str):
     """
     Microwave Node.
@@ -39,20 +61,6 @@ class Microwave(str):
             )
         }
         self.codes = {}
-        self.codes[400] = self.codes[404] = coroutine(
-            lambda this, req, res, err:
-                res.push("{} {}".format(res.status_code, err)).ok()
-        )
-        self.codes[302] = coroutine(
-            lambda this, req, res, err:
-                res.header("Location", err).ok()
-        )
-        self.codes[500] = coroutine(
-            lambda this, req, res, err:
-                res.push(
-                    err if this.debug else "Unknown Error"
-                ).ok()
-        )
 
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
@@ -194,7 +202,11 @@ class Microwave(str):
         - Result object.
         """
         res.status(code)
-        result = yield from self.codes[code](self, req, res, message)
+        if code in self.codes:
+            result = yield from self.codes[code](self, req, res, message)
+        else:
+            result = yield from codes[code](self, req, res, message)
+
         return result if isinstance(result, Ok) else res.ok()
 
     @coroutine
@@ -249,19 +261,22 @@ class Microwave(str):
                     return result
             else:
                 raise err
-        except Exception:
-            result = yield from self.trigger(
-                req, res, 500, format_exc()
-            )
-            if isinstance(result, Ok):
-                return result
 
         return res.ok()
+
+    @coroutine
+    def start(self, req, res):
+        try:
+            result = yield from self.handler(req, res)
+        except Exception:
+            result = yield from self.trigger(req, res, 500, format_exc())
+
+        return result
 
     def __call__(self, env, start_response):
         req, res = Request(env), Response(start_response)
         return async(unok(
-            self.handler(req, res)
+            self.start(req, res)
             if req.branches.pop(0) == self else
             self.trigger(req, res, 400, "URL Error")
         ))
