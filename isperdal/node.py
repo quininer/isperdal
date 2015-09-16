@@ -1,6 +1,7 @@
 from asyncio import async, coroutine, iscoroutinefunction
 from functools import reduce
 from types import FunctionType
+from traceback import format_exc
 
 from .request import Request
 from .response import Response
@@ -38,11 +39,17 @@ class Microwave(str):
         self.codes = {}
         self.codes[400] = self.codes[404] = coroutine(
             lambda this, req, res, err:
-                res.push("{} {}".format(res.status_code, err))
+                res.push("{} {}".format(res.status_code, err)).ok()
         )
         self.codes[302] = coroutine(
             lambda this, req, res, err:
-                res.header("Location", err)
+                res.header("Location", err).ok()
+        )
+        self.codes[500] = coroutine(
+            lambda this, req, res, err:
+                res.push(
+                    err if this.debug else "Unknown Error"
+                ).ok()
         )
 
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
@@ -240,6 +247,12 @@ class Microwave(str):
                     return result
             else:
                 raise err
+        except Exception:
+            result = yield from self.trigger(
+                req, res, 500, format_exc()
+            )
+            if isinstance(result, Ok):
+                return result
 
         return res.ok()
 
@@ -252,4 +265,5 @@ class Microwave(str):
         ))
 
     def run(self, host="127.0.0.1", port=8000, debug=True, ssl=()):
+        Microwave.debug = debug
         AioHTTPServer(host, port, debug, ssl).run(self.__call__)
