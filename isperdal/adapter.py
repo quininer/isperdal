@@ -2,7 +2,7 @@ from asyncio import get_event_loop
 from ssl import SSLContext
 
 from sys import version_info
-if version_info > (3, 3, 0):
+if version_info > (3, 4, 0):
     from ssl import PROTOCOL_TLSv1_2 as PROTOCOL
 else:
     from ssl import PROTOCOL_TLSv1_1 as PROTOCOL

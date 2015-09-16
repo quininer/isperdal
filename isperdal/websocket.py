@@ -69,8 +69,6 @@ class WebSocket(object):
             except Close:
                 break
 
-        return
-
     @coroutine
     def on_handshake(self):
         for fn in self.res.hook:
