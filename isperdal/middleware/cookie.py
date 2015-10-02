@@ -69,6 +69,6 @@ def cookie(this, req, res):
         return self
 
     @res.hook.append
-    def hook_cookie(self):
-        if hasattr(self, 'cookies') and self.cookies:
-            self.header(*self.cookies.output().split(': ', 1))
+    def hook_cookie(res):
+        if hasattr(res, 'cookies') and res.cookies:
+            res.header(*res.cookies.output().split(': ', 1))

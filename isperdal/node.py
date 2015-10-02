@@ -10,6 +10,10 @@ from .utils import Result, Ok, Err, unok
 
 
 codes = {
+    302: coroutine(
+        lambda this, req, res, err:
+            res.header("Location", err).ok()
+    ),
     400: coroutine(
         lambda this, req, res, err:
             res.push("400 {}".format(err)).ok()
@@ -18,13 +22,11 @@ codes = {
         lambda this, req, res, err:
             res.push("404 {}".format(err)).ok()
     ),
-    302: coroutine(
-        lambda this, req, res, err:
-            res.header("Location", err).ok()
-    ),
     500: coroutine(
         lambda this, req, res, err:
-            res.push(err if this.debug else "500 Unknown Error").ok()
+            print(err) or res.push(
+                err if this.debug else "500 Unknown Error"
+            ).ok()
     )
 }
 
@@ -264,8 +266,13 @@ class Microwave(str):
     def start(self, req, res):
         try:
             result = yield from self.handler(req, res)
-        except Exception:
-            result = yield from self.trigger(req, res, 500, format_exc())
+        except Exception as err:
+            if isinstance(err, Err) and res.status_code in codes:
+                result = yield from self.trigger(
+                    req, res, res.status_code, err.err()
+                )
+            else:
+                result = yield from self.trigger(req, res, 500, format_exc())
 
         return result
 
