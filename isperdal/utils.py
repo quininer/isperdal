@@ -137,7 +137,7 @@ def tobranch(path):
     return ["{}/".format(p) for p in pathsplit[:-1]] + pathsplit[-1:]
 
 
-def resp_status(status_code, status_text=None):
+def resp_status(status_code, status_text):
     """
     >>> resp_status(200)
     '200 OK'

@@ -184,7 +184,11 @@ class Microwave(str):
         """
         def add_err(handle):
             for code in codes:
-                self.codes[code] = coroutine(handle)
+                self.codes[code] = (
+                    handle
+                    if iscoroutinefunction(handle) else
+                    coroutine(handle)
+                )
             return self
         return add_err
 
