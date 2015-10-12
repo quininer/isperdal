@@ -261,8 +261,8 @@ class Microwave(str):
                 )
                 if isinstance(result, Ok):
                     return result
-            else:
-                raise err
+
+            raise err
 
         return res.ok()
 
