@@ -209,7 +209,7 @@ class Microwave(str):
         result = yield from (
             self.codes if code in self.codes else codes
         )[code](self, req, res, message)
-        return result if isinstance(result, Ok) else res.ok()
+        return result
 
     @coroutine
     def handler(self, req, res):
