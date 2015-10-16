@@ -138,7 +138,7 @@ class Microwave(str):
         - <node>                node.
         """
         self.add(node)
-        return node
+        return self.subnode[self.subnode.index(node)]
 
     def append(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
