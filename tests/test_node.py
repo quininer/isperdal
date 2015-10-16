@@ -66,32 +66,43 @@ class TestNode:
     def test_add(self):
         index = u('index/').all()(lambda: 1)
         self.root.add(index)
-        assert (yield from self.root.subnode.pop().handles['GET'].pop()()) is 1
+        assert (yield from self.root.subnode[0].handles['GET'].pop()()) is 1
+        index2 = u('index/').get(u('app'))(lambda: 2)
+        self.root.add(index2)
+        assert (
+            yield from self.root
+            .subnode.pop()
+            .subnode.pop()
+            .handles['GET'].pop()()
+        ) is 2
 
     @aiotest
     def test_then(self):
         self.root.then(u('index/')).then(u('test')).all()(lambda: 1)
         assert (
-            yield from self.root.
-            subnode.pop().subnode.pop().
-            handles['GET'].pop()()
+            yield from self.root
+            .subnode.pop()
+            .subnode.pop()
+            .handles['GET'].pop()()
         ) is 1
 
     @aiotest
     def test_append(self):
         self.root.append(u('index/'), u('test'))(lambda: 1)
         assert (
-            yield from self.root.
-            subnode.pop().subnode.pop().
-            handles['GET'].pop()()
+            yield from self.root
+            .subnode.pop()
+            .subnode.pop()
+            .handles['GET'].pop()()
         ) is 1
 
         self.root.append(u('index/'), u('test'), methods=('GET',))(lambda: 1)
         assert not self.root.subnode[-1].subnode[-1].handles['OPTION']
         assert (
-            yield from self.root.
-            subnode.pop().subnode.pop().
-            handles['GET'].pop()()
+            yield from self.root
+            .subnode.pop()
+            .subnode.pop()
+            .handles['GET'].pop()()
         ) is 1
 
     @aiotest
@@ -126,7 +137,7 @@ class TestNode:
 
         result = u('/').append(u('posts/'), u(':id'))(
             lambda this, req, res:
-                res.push((yield from req.rest('id')))
+                res.push((yield from req.rest('id'))).ok()
         ).handler(req, res)
 
         assert (yield from unok(result)) == [b'1']

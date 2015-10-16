@@ -117,7 +117,16 @@ class Microwave(str):
 
         - self                  self node.
         """
-        self.subnode.append(node)
+        if node in self.subnode:
+            exist = self.subnode[self.subnode.index(node)]
+            for m in node.handles:
+                exist.handles[m].extend(node.handles[m])
+
+            for n in node.subnode:
+                exist.add(n)
+        else:
+            self.subnode.append(node)
+
         return self
 
     def then(self, node):
@@ -131,7 +140,7 @@ class Microwave(str):
         self.add(node)
         return node
 
-    def append(*nodes, methods=('HEAD', 'GET', 'POST')):
+    def append(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
         Add multiple subnode, then..
 
@@ -141,11 +150,11 @@ class Microwave(str):
         - <function>    wrap function
             ...
         """
-        self = nodes[0]
+        first = nodes[0]
 
         def append_wrap(*handles):
             reduce((lambda x, y: x.then(y)), nodes).all(methods)(*handles)
-            return self
+            return self.add(first)
         return append_wrap
 
     def get(self, *nodes):
@@ -251,9 +260,6 @@ class Microwave(str):
                     if isinstance(result, Ok):
                         return result
 
-            if not (res.status_code or res.body):
-                raise res.status(404).err("Not Found")
-
         except Err as err:
             if res.status_code in self.codes:
                 result = yield from self.trigger(
@@ -264,12 +270,12 @@ class Microwave(str):
 
             raise err
 
-        return res.ok()
-
     @coroutine
     def start(self, req, res):
         try:
             result = yield from self.handler(req, res)
+            if not (isinstance(result, Ok) or res.status_code or res.body):
+                raise res.status(404).err("Not Found")
         except Exception as err:
             if isinstance(err, Err) and res.status_code in codes:
                 result = yield from self.trigger(

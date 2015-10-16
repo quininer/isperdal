@@ -78,7 +78,7 @@ class Response(object):
         )
         return Ok(self.body if T is None else T)
 
-    def err(self, E):
+    def err(self, E=None):
         """
         Throw a error.
 
