@@ -274,7 +274,7 @@ class Microwave(str):
     def start(self, req, res):
         try:
             result = yield from self.handler(req, res)
-            if not (isinstance(result, Ok) or res.status_code or res.body):
+            if not isinstance(result, Ok):
                 raise res.status(404).err("Not Found")
         except Exception as err:
             if isinstance(err, Err) and res.status_code in codes:
