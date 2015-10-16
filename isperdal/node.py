@@ -81,8 +81,7 @@ class Microwave(str):
         """
         def add_route(*handles):
             for node in nodes:
-                self.add(node)
-                node.all(methods)(*handles)
+                self.then(node).all(methods)(*handles)
             return self
         return add_route
 
@@ -140,7 +139,7 @@ class Microwave(str):
         self.add(node)
         return self.subnode[self.subnode.index(node)]
 
-    def append(self, *nodes, methods=('HEAD', 'GET', 'POST')):
+    def append(*nodes, methods=('HEAD', 'GET', 'POST')):
         """
         Add multiple subnode, then..
 
@@ -150,11 +149,11 @@ class Microwave(str):
         - <function>    wrap function
             ...
         """
-        first = nodes[0]
+        self = nodes[0]
 
         def append_wrap(*handles):
             reduce((lambda x, y: x.then(y)), nodes).all(methods)(*handles)
-            return self.add(first)
+            return self
         return append_wrap
 
     def get(self, *nodes):
@@ -236,6 +235,7 @@ class Microwave(str):
                     result = yield from handle(self, req, res)()
                 else:
                     result = yield from handle(self, req, res)
+                    # NOTE: why? Python 3.4- always returns None???
 
                 if isinstance(result, Result):
                     if result.is_ok():
@@ -260,6 +260,11 @@ class Microwave(str):
                     if isinstance(result, Ok):
                         return result
 
+            if not res.done:
+                raise res.status(404).err("Not Found")
+            else:
+                return res.ok()
+
         except Err as err:
             if res.status_code in self.codes:
                 result = yield from self.trigger(
@@ -274,8 +279,6 @@ class Microwave(str):
     def start(self, req, res):
         try:
             result = yield from self.handler(req, res)
-            if not isinstance(result, Ok):
-                raise res.status(404).err("Not Found")
         except Exception as err:
             if isinstance(err, Err) and res.status_code in codes:
                 result = yield from self.trigger(

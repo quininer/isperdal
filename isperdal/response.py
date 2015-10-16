@@ -18,6 +18,7 @@ class Response(object):
         self.hook = []
         self.status_code = 0
         self.status_text = None
+        self.done = False
 
     def status(self, code, text=None):
         """
@@ -72,6 +73,7 @@ class Response(object):
         """
         for fn in self.hook:
             fn(self)
+        self.done = True
         self.start_response(
             resp_status(self.status_code, self.status_text),
             self.headers.items()
