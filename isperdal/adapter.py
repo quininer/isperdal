@@ -4,11 +4,7 @@ from ssl import SSLContext
 from aiohttp.wsgi import WSGIServerHttpProtocol
 from aiohttp.websocket import do_handshake
 
-from sys import version_info
-if version_info < (3, 4, 0):
-    from ssl import PROTOCOL_TLSv1 as PROTOCOL
-else:
-    from ssl import PROTOCOL_TLSv1_2 as PROTOCOL
+from ssl import PROTOCOL_TLSv1_2 as PROTOCOL
 
 
 class AioWSGIServerProtocol(WSGIServerHttpProtocol):
