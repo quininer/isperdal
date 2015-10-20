@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 from .node import Microwave
+from .websocket import WebSocket
 
 
 def only(handle):

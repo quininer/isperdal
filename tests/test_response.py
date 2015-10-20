@@ -73,7 +73,3 @@ class TestRes:
             raise self.res.err(True)
         except Err as err:
             assert err.err()
-
-    def test_redirect(self):
-        assert self.res.redirect(True).err()
-        assert self.res.status_code == 302

@@ -11,7 +11,7 @@ from aiohttp.websocket import (
 )
 
 from isperdal.utils import aiotest
-from isperdal.websocket import WebSocket
+from isperdal import WebSocket
 
 
 class fakeWriter:

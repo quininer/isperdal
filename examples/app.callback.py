@@ -16,7 +16,7 @@ u('/').all()(
     u('app/').all()(
         lambda this, req, res:
             (yield from req.query('id')) == 'isperdal' or
-            (_ for _ in ()).throw(res.redirect('/index'))
+            (_ for _ in ()).throw(res.status(302).err('/index'))
     )
 )(
     lambda this, req, res:

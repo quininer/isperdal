@@ -71,9 +71,11 @@ class Response(object):
 
         - <Ok>
         """
-        for fn in self.hook:
-            fn(self)
-        self.done = True
+        if not self.done:
+            for fn in self.hook:
+                fn(self)
+            self.done = True
+
         self.start_response(
             resp_status(self.status_code, self.status_text),
             self.headers.items()
@@ -89,8 +91,3 @@ class Response(object):
         - <Err>
         """
         return Err(E)
-
-    def redirect(self, url):
-        if not (300 <= self.status_code < 400):
-            self.status(302)
-        return Err(url)
