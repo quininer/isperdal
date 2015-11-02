@@ -80,7 +80,7 @@ class TestReq:
     def test_header(self):
         req = Request(env)
         assert (yield from req.header('User-Agent')) == 'Mozilla'
-        assert (yield from req.header('Remote-Addr')) == '127.0.0.1'
+        assert (yield from req.header('Remote-Addr')) == None
 
     @aiotest
     def test_forms(self):

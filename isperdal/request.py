@@ -89,15 +89,11 @@ class Request(object):
             &asyncio
             1. Priority resolve HTTP_NAME format head.
                 eg: HTTP_USER_AGENT
-                eg: REMOTE_ADDR
             2. Automatic conversion case.
         ...
         """
         name = name.replace('-', '_').upper()
-        return (
-            self.env.get("HTTP_{}".format(name)) or
-            self.env.get(name)
-        )
+        return self.env.get("HTTP_{}".format(name))
 
     @property
     @coroutine
