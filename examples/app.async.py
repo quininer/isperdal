@@ -2,14 +2,16 @@
 # encoding: utf-8
 
 from isperdal import Microwave as u
+from isperdal import only
 
 app = u('/')
 
 
-@app.get(u(":id"))
+@app.get(u("index"))
+@only
 async def index(this, req, res):
     return res.push(
-        await req.rest("id")
+        await req.query("id")
     ).ok()
 
 

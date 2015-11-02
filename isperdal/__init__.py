@@ -14,10 +14,10 @@ def only(handle):
 
     >>> from isperdal.utils import aiotest
     >>> req = type('Request', (), {
-    ...     'next': []
+    ...     'branches': []
     ... })()
     >>> nreq = type('Request', (), {
-    ...     'next': ['next']
+    ...     'branches': ['next']
     ... })()
 
     >>> @coroutine
@@ -44,7 +44,7 @@ def only(handle):
     isaio = iscoroutinefunction(handle)
 
     def only_wrap(this, req, res):
-        if not req.next:
+        if not req.branches:
             return (
                 (yield from handle(this, req, res))
                 if isaio else
