@@ -194,12 +194,13 @@ def aiotest(fn):
     ...     assert bar == "BAR"
     >>> foo("BAR")
 
-    >>> @aiotest
-    ... def foo2(baz):
-    ...     return (yield from baz())
     >>> @coroutine
     ... def baz():
     ...     return "BAZ"
+    >>> @aiotest
+    ... def foo2(baz):
+    ...     return (yield from baz())
+
     >>> foo2(baz)
     'BAZ'
     """
