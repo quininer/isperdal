@@ -54,12 +54,14 @@ class Response(object):
 
         ...
         """
-        if isinstance(body, str):
-            body = body.encode()
+        if body:
+            if isinstance(body, str):
+                body = body.encode()
 
-        self.body.extend((
-            lambda b: [b[r:r+8192] for r in range(0, len(b), 8192)]
-        )(body))
+            self.body.extend((
+                lambda b: [b[r:r+8192] for r in range(0, len(b), 8192)]
+            )(body))
+
         return self
 
     def ok(self, T=None):
@@ -76,10 +78,11 @@ class Response(object):
                 fn(self)
             self.done = True
 
-        self.start_response(
-            resp_status(self.status_code, self.status_text),
-            self.headers.items()
-        )
+            self.start_response(
+                resp_status(self.status_code, self.status_text),
+                self.headers.items()
+            )
+
         return Ok(self.body if T is None else T)
 
     def err(self, E=None):

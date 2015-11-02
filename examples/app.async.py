@@ -7,7 +7,7 @@ from isperdal import only
 app = u('/')
 
 
-@app.get(u("index"))
+@app.get(*map(u, ('', "index")))
 @only
 async def index(this, req, res):
     return res.push(
