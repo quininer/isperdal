@@ -15,7 +15,7 @@ class Response(object):
         self.start_response = start_response
         self.headers = {}
         self.body = []
-        self.hook = []
+        self.hooks = []
         self.status_code = 0
         self.status_text = None
         self.done = False
@@ -64,6 +64,18 @@ class Response(object):
 
         return self
 
+    def hook(self, fn):
+        """
+        Response hook.
+            In response, some processing.
+
+        + fn        hook function
+
+        ...
+        """
+        self.hooks.append(fn)
+        return self
+
     def ok(self, T=None):
         """
         Complete a response.
@@ -74,7 +86,7 @@ class Response(object):
         - <Ok>
         """
         if not self.done:
-            for fn in self.hook:
+            for fn in self.hooks:
                 fn(self)
             self.done = True
 

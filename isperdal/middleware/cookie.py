@@ -26,7 +26,7 @@ def cookie(this, req, res):
 
     >>> res.cookie('foo', 'bar').cookies
     <SimpleCookie: foo='bar'>
-    >>> res.hook[-1](res)
+    >>> res.hooks[-1](res)
     >>> res.headers['Set-Cookie']
     'foo=bar'
     """
@@ -68,7 +68,7 @@ def cookie(this, req, res):
 
         return self
 
-    @res.hook.append
+    @res.hook
     def hook_cookie(res):
         if hasattr(res, 'cookies') and res.cookies:
             res.header(*res.cookies.output().split(': ', 1))
