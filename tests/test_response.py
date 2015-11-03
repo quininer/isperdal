@@ -63,13 +63,13 @@ class TestRes:
         assert self.res.body[-1] == b'p'
 
     def test_hook(self):
-        assert self.res.hook(lambda res: res) == self.res
-        assert self.res.hooks[-1](self.res) == self.res
+        assert self.res.hook(lambda res: res) is self.res
+        assert self.res.hooks[-1](self.res) is self.res
 
     def test_ok(self):
-        assert self.res.done == False
+        assert self.res.done is False
         result = self.res.header('X-Test', 'test too').ok()
-        assert self.res.done == True
+        assert self.res.done is True
         assert isinstance(result, Result)
         assert self.res.ok(True).ok()
 
