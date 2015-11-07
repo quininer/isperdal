@@ -246,14 +246,14 @@ class Microwave(str):
             if req.branches:
                 nextnode = req.branches.pop(0)
                 for node in self.subnode:
-                    if len(node) >= 3 and node[:2] == ":!":
-                        req._rest[
-                            node[2:].rstrip('/')
-                        ] = "".join([nextnode]+req.branches)
-                    elif len(node) >= 2 and node[0] == ":":
-                        req._rest[
-                            node[1:].rstrip('/')
-                        ] = nextnode.rstrip('/')
+                    if node.startswith(":!"):
+                        req._rest[node[2:]] = "".join(
+                            [nextnode] + req.branches
+                        )
+                    elif node.startswith(":"):
+                        if node.endswith("/") != nextnode.endswith("/"):
+                            continue
+                        req._rest[node[1:]] = nextnode.rstrip("/")
                     elif nextnode != node:
                         continue
                     result = yield from node.handler(req, res)

@@ -3,7 +3,7 @@ python:
   - 3.4
   - 3.5
 
-sudo: required
+sudo: false
 
 install:
   - pip install pep8
