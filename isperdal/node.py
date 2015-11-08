@@ -253,7 +253,7 @@ class Microwave(str):
                     elif node.startswith(":"):
                         if node.endswith("/") != nextnode.endswith("/"):
                             continue
-                        req._rest[node[1:]] = nextnode.rstrip("/")
+                        req._rest[node[1:].rstrip("/")] = nextnode.rstrip("/")
                     elif nextnode != node:
                         continue
                     result = yield from node.handler(req, res)
