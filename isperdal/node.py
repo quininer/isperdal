@@ -1,3 +1,4 @@
+from copy import copy
 from asyncio import async, coroutine, iscoroutinefunction
 from functools import reduce
 from types import FunctionType
@@ -31,11 +32,9 @@ codes = {
 }
 
 
-class Microwave(str):
+class Node(str):
     """
     Microwave Node.
-    > 奥塔究竟怎么设计我的喉咙的？
-
     """
 
     debug = True
@@ -220,7 +219,7 @@ class Microwave(str):
         return result
 
     @coroutine
-    def handler(self, req, res):
+    def handler(self, req, res, branches):
         """
         Request handle.
         """
@@ -243,12 +242,12 @@ class Microwave(str):
                     else:
                         raise result
 
-            if req.branches:
-                nextnode = req.branches.pop(0)
+            if branches:
+                nextnode = branches.pop(0)
                 for node in self.subnode:
                     if node.startswith(":!"):
                         req._rest[node[2:]] = "".join(
-                            [nextnode] + req.branches
+                            [nextnode] + branches
                         )
                     elif node.startswith(":"):
                         if node.endswith("/") != nextnode.endswith("/"):
@@ -256,7 +255,7 @@ class Microwave(str):
                         req._rest[node[1:].rstrip("/")] = nextnode.rstrip("/")
                     elif nextnode != node:
                         continue
-                    result = yield from node.handler(req, res)
+                    result = yield from node.handler(req, res, copy(branches))
                     if isinstance(result, Ok):
                         return result
 
@@ -278,7 +277,7 @@ class Microwave(str):
     @coroutine
     def start(self, req, res):
         try:
-            result = yield from self.handler(req, res)
+            result = yield from self.handler(req, res, copy(req.branches))
         except Exception as err:
             if isinstance(err, Err) and res.status_code in codes:
                 result = yield from self.trigger(
@@ -298,5 +297,5 @@ class Microwave(str):
         ))
 
     def run(self, host="127.0.0.1", port=8000, debug=True, ssl=()):
-        Microwave.debug = debug
+        Node.debug = debug
         AioHTTPServer(host, port, debug, ssl).run(self.__call__)

@@ -78,7 +78,7 @@ class Request(object):
             2. not support nested parsing.
         ...
         """
-        return (lambda f="", *_: f)(*(
+        return (lambda f=None, *_: f)(*(
             yield from self.querys
         ).get(name, [None]))
 

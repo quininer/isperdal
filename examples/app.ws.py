@@ -3,7 +3,7 @@
 
 from aysncio import coroutine
 
-from isperdal import Microwave as u
+from isperdal import Node as u
 from isperdal.websocket import WebSocket
 
 app = u('/')

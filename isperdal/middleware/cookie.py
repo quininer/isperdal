@@ -8,7 +8,7 @@ def cookie(this, req, res):
     """
     >>> from isperdal.request import Request
     >>> from isperdal.response import Response
-    >>> from isperdal import Microwave as u
+    >>> from isperdal import Node as u
 
     >>> from asyncio import coroutine, get_event_loop
     >>> loop = get_event_loop()

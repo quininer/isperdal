@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # NOTE this is not real.
-from isperdal import Microwave as u
+from isperdal import Node as u
 from database import db
 from os import path
 

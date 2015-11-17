@@ -7,7 +7,7 @@ a Web framework, asyncio based.
 
 example:
 
-    from isperdal import Microwave as u
+    from isperdal import Node as u
 
     u('/').all()(
         lambda this, req, res:

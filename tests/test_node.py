@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from isperdal import Microwave as u
+from copy import copy
+
+from isperdal import Node as u
 from isperdal.request import Request
 from isperdal.response import Response
 from isperdal.websocket import WebSocket
@@ -126,7 +128,7 @@ class TestNode:
         result = u('/').all()(
             lambda this, req, res:
                 res.push("Test.").ok()
-        ).handler(req, res)
+        ).handler(req, res, copy(req.branches))
 
         assert (yield from unok(result)) == [b'Test.']
 
@@ -138,7 +140,7 @@ class TestNode:
         result = u('/').append(u('posts/'), u(':id'))(
             lambda this, req, res:
                 res.push((yield from req.rest('id'))).ok()
-        ).handler(req, res)
+        ).handler(req, res, copy(req.branches))
 
         assert (yield from unok(result)) == [b'1']
 
@@ -150,7 +152,7 @@ class TestNode:
         result = u('/').append(u('file/'), u('img/'), u(':!png'))(
             lambda this, req, res:
                 res.push((yield from req.rest('png'))).ok()
-        ).handler(req, res)
+        ).handler(req, res, copy(req.branches))
 
         assert (yield from unok(result)) == [b'test.png']
 
@@ -165,6 +167,6 @@ class TestNode:
         ).all()(
             lambda this, req, res:
                 res.status(500).err("Test")
-        ).handler(req, res)
+        ).handler(req, res, copy(req.branches))
 
         assert (yield from unok(result)) == [b'Test']

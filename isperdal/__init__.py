@@ -1,6 +1,6 @@
 from asyncio import iscoroutinefunction, coroutine
 
-from .node import Microwave
+from .node import Node
 from .websocket import WebSocket
 
 
