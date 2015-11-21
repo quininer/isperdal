@@ -11,7 +11,7 @@ example:
 
     u('/').all()(
         lambda this, req, res:
-            res.push("Hello world.")
+            res.push("Hello world.").ok()
     ).run()
 
 reference
