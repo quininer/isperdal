@@ -5,6 +5,7 @@ from isperdal import Node as u
 
 root = u('/')
 
+
 @root.append(u(":name") / u(":id"))
 async def foo(this, req, res):
     return res.push(
