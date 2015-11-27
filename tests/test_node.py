@@ -90,7 +90,7 @@ class TestNode:
 
     @aiotest
     def test_append(self):
-        self.root.append(u('index/'), u('test'))(lambda: 1)
+        self.root.append([u('index/'), u('test')])(lambda: 1)
         assert (
             yield from self.root
             .subnode.pop()
@@ -98,7 +98,7 @@ class TestNode:
             .handles['GET'].pop()()
         ) is 1
 
-        self.root.append(u('index/'), u('test'), methods=('GET',))(lambda: 1)
+        self.root.append([u('index/'), u('test')], methods=('GET',))(lambda: 1)
         assert not self.root.subnode[-1].subnode[-1].handles['OPTION']
         assert (
             yield from self.root
@@ -137,7 +137,7 @@ class TestNode:
         req, res = Request(env), Response(start_response)
         assert req.branches.pop(0) == '/'
 
-        result = u('/').append(u('posts/'), u(':id'))(
+        result = u('/').append([u('posts/'), u(':id')])(
             lambda this, req, res:
                 res.push((yield from req.rest('id'))).ok()
         ).handler(req, res, copy(req.branches))
@@ -149,7 +149,7 @@ class TestNode:
         req, res = Request(env), Response(start_response)
         assert req.branches.pop(0) == '/'
 
-        result = u('/').append(u('file/'), u('img/'), u(':!png'))(
+        result = u('/').append([u('file/'), u('img/'), u(':!png')])(
             lambda this, req, res:
                 res.push((yield from req.rest('png'))).ok()
         ).handler(req, res, copy(req.branches))
@@ -170,3 +170,23 @@ class TestNode:
         ).handler(req, res, copy(req.branches))
 
         assert (yield from unok(result)) == [b'Test']
+
+    def test_copy(self):
+        node = u("node")
+        node.subnode = 1
+        node.handles = 2
+        node.codes = 3
+
+        node_copy = node.copy("node/")
+
+        assert node_copy == "node/"
+        assert node_copy.subnode == node.subnode
+        assert node_copy.handles == node.handles
+        assert node_copy.codes == node.codes
+
+    def test_div(self):
+        nodes = u("/") / u("name")
+        nodes2 = u("/") / u("name") / u("id")
+
+        assert nodes == ["/", "name"]
+        assert nodes2 == ["/", "name/", "id"]

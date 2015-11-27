@@ -61,6 +61,13 @@ class Node(str):
         }
         self.codes = {}
 
+    def copy(self, name):
+        node = Node(name)
+        node.subnode = self.subnode
+        node.handles = self.handles
+        node.codes = self.codes
+        return node
+
     def route(self, *nodes, methods=('HEAD', 'GET', 'POST')):
         """
         The basic route map.
@@ -138,7 +145,19 @@ class Node(str):
         self.add(node)
         return self.subnode[self.subnode.index(node)]
 
-    def append(*nodes, methods=('HEAD', 'GET', 'POST')):
+    def __truediv__(self, node):
+        return [
+            self if self.endswith("/") else self.copy("{}/".format(self)),
+            node
+        ]
+
+    def __rtruediv__(self, nodes):
+        return [
+            node if node.endswith("/") else node.copy("{}/".format(node))
+            for node in nodes
+        ] + [self]
+
+    def append(self, nodes, methods=('HEAD', 'GET', 'POST')):
         """
         Add multiple subnode, then..
 
@@ -148,10 +167,11 @@ class Node(str):
         - <function>    wrap function
             ...
         """
-        self = nodes[0]
-
         def append_wrap(*handles):
-            reduce((lambda x, y: x.then(y)), nodes).all(methods)(*handles)
+            reduce(
+                (lambda x, y: x.then(y)),
+                [self] + nodes
+            ).all(methods)(*handles)
             return self
         return append_wrap
 
